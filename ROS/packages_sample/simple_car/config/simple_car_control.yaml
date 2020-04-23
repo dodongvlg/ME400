@@ -1,0 +1,20 @@
+simple_car:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50  
+
+  # Velocity Controllers ---------------------------------------
+  joint_vel_controller:
+    type: velocity_controllers/JointGroupVelocityController
+    joints: 
+      - joint1
+      - joint2
+      - joint3
+      - joint4
+    gains:
+      joint1 : {p: 100, i: 0.01, d: 10}
+      joint2 : {p: 100, i: 0.01, d: 10}
+      joint3 : {p: 100, i: 0.01, d: 10}
+      joint4 : {p: 100, i: 0.01, d: 10}
+

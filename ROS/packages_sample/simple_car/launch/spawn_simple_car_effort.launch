@@ -1,0 +1,11 @@
+<launch>
+  <arg name="x_pos" default="3.5"/>
+  <arg name="y_pos" default="0.5"/>
+  <arg name="z_pos" default="1.5"/>
+
+  <!-- Load the model into the ROS Parameter Server -->
+  <param name="robot_description" 
+   textfile="$(find simple_car_1_urdf)/urdf/simple_car_effort.urdf" />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model simple_car -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+</launch>

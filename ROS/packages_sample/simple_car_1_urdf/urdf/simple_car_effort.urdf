@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="simple_car">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.25 0.025 -0.2"
+        rpy="0 0 0" />
+      <mass
+        value="10" />
+      <inertia
+        ixx="0.135416666666667"
+        ixy="0"
+        ixz="0"
+        iyy="0.341666666666667"
+        iyz="0"
+        izz="0.210416666666667" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="wheel1">
+    <inertial>
+      <origin
+        xyz="0 -1.38777878078145E-17 -0.024962944913385"
+        rpy="0 0 0" />
+      <mass
+        value="1.53699920565193" />
+      <inertia
+        ixx="0.00411199807673245"
+        ixy="-1.80790160902052E-37"
+        ixz="-4.27705368146496E-20"
+        iyy="0.00411199807673245"
+        iyz="-5.632110157191E-36"
+        izz="0.00760139383904027" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint1"
+    type="continuous">
+    <origin
+      xyz="0.05 0.4 0.1"
+      rpy="1.5708 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="wheel1" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="wheel2">
+    <inertial>
+      <origin
+        xyz="-5.55111512312578E-17 -5.55111512312578E-17 -0.024962944913385"
+        rpy="0 0 0" />
+      <mass
+        value="1.53699920565193" />
+      <inertia
+        ixx="0.00411199807673246"
+        ixy="0"
+        ixz="-2.44990655222421E-19"
+        iyy="0.00411199807673246"
+        iyz="-3.59388953669466E-19"
+        izz="0.00760139383904027" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint2"
+    type="continuous">
+    <origin
+      xyz="0.45 0.4 0.1"
+      rpy="1.5708 0.86842 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="wheel2" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="wheel3">
+    <inertial>
+      <origin
+        xyz="0 0 -0.024962944913385"
+        rpy="0 0 0" />
+      <mass
+        value="1.53699920565193" />
+      <inertia
+        ixx="0.00411199807673246"
+        ixy="2.16840434497101E-19"
+        ixz="1.13580262374594E-19"
+        iyy="0.00411199807673246"
+        iyz="-4.55065878485023E-19"
+        izz="0.00760139383904028" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint3"
+    type="continuous">
+    <origin
+      xyz="0.05 0 0.1"
+      rpy="1.5708 0.39309 -3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="wheel3" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="wheel4">
+    <inertial>
+      <origin
+        xyz="0 -1.38777878078145E-17 -0.024962944913385"
+        rpy="0 0 0" />
+      <mass
+        value="1.53699920565193" />
+      <inertia
+        ixx="0.00411199807673246"
+        ixy="-3.25260651745651E-19"
+        ixz="-9.77313044590516E-19"
+        iyy="0.00411199807673246"
+        iyz="-2.63437324792461E-19"
+        izz="0.00760139383904027" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://simple_car_1_urdf/meshes/wheel4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint4"
+    type="continuous">
+    <origin
+      xyz="0.45 0 0.1"
+      rpy="1.5708 0.39309 -3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="wheel4" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+
+  <transmission name="tran1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran2">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran4">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="joint4">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor4">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/simple_car</robotNamespace>
+    </plugin>
+  </gazebo>
+
+
+
+
+
+</robot>

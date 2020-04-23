@@ -1,0 +1,23 @@
+simple_car:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+
+  # Velocity Controllers ---------------------------------------
+  left_front_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint1
+    pid: {p: 1.0, i: 0.001, d: 0.01}
+  right_front_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint3
+    pid: {p: 1.0, i: 0.001, d: 0.01}
+  left_back_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint2
+    pid: {p: 1.0, i: 0.001, d: 0.01}
+  right_back_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint4
+    pid: {p: 1.0, i: 0.001, d: 0.01}
