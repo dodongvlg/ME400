@@ -206,6 +206,8 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(remocon src/remocon.cpp)
-target_link_libraries(remocon ${catkin_LIBRARIES})
+add_executable(rc_simple src/rc_simple.cpp)
+target_link_libraries(rc_simple ${catkin_LIBRARIES})
+add_executable(rc_simcar src/rc_simcar.cpp)
+target_link_libraries(rc_simcar ${catkin_LIBRARIES})
 # add_dependencies(remocon beginner_tutorials_generate_messages_cpp)

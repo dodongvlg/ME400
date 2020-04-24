@@ -7,7 +7,7 @@
 int main(int argc, char **argv)
 {
 
-  ros::init(argc, argv, "remocon");
+  ros::init(argc, argv, "rc_simple");
   ros::NodeHandle n;
   ros::Publisher remote_pub = n.advertise<std_msgs::Float64>("/simple_machine/joint1_position_controller/command", 1000);
   ros::Rate loop_rate(100);
@@ -18,27 +18,25 @@ int main(int argc, char **argv)
   float d_angle;
   char command[16];
 
-  std::cout << "[remocon] Command format is (+ or -)(number to rotate)\n";
+  std::cout << "[rc_simple] Command format is (+ or -)(number to rotate)\n";
   while (ros::ok())
   {
-    std::cout << "[remocon] Command : ";
+    std::cout << "[rc_simple] Command : ";
     std::cin >> command;
     if (command[0] == '+'){
-      std::cout << "[remocon] Direciton (+) ";
+      std::cout << "[rc_simple] Direciton (+) ";
       d_angle = 0.1;
     }
     else if (command[0] == '-'){
-      std::cout << "[remocon] Direciton (-) ";
+      std::cout << "[rc_simple] Direciton (-) ";
       d_angle = -0.1;
     }
     else{
-      std::cout << "Invalid format\n";
+      std::cout << "[rc_simple] Invalid format\n";
       continue;
     }
     std::istringstream(command + 1) >> n_rot;
-    std::cout << "Rotation " << n_rot << "rad\n";
-    
-    // std::cout << "Angle :  " << (float) angle / 10;
+    std::cout << "[rc_simple] Rotation " << n_rot << "rad\n";
 
     for (i_rot = 0; i_rot < n_rot * 10; i_rot++){
       std_msgs::Float64 angle_msg;
