@@ -27,7 +27,7 @@ map open
 ```
 roslaunch map_generate import_world.launch
 ```
-swapn the robot
+spawn the robot
 ```
 roslaunch turtlebot3_description spawn_turtlebot3.launch
 ```
