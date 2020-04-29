@@ -27,7 +27,7 @@ map open
 ```
 roslaunch map_generate import_world.launch
 ```
-swapn the robot
+spawn the robot
 ```
 roslaunch turtlebot3_description spawn_turtlebot3.launch
 ```
@@ -55,6 +55,10 @@ x: linear velocity decrease
 detect and publish ball position from camera image
 ```
 rosrun ball_detection ball_detect_node
+```
+main data processing
+```
+rosrun data_integrate data_integration_node
 ```
 draw the lidar data and ball position
 ```
