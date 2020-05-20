@@ -104,10 +104,8 @@ void map_Callback(const std_msgs::Float64MultiArray map_msg)
 	std::vector<double> map_data = map_msg.data;
 	
 	theta = map_data.at(0);
-	width = map_data.at(1)*100;
-	height = map_data.at(2)*100;
-	sys_x = map_data.at(3)*100;
-	sys_y = map_data.at(4)*100;
+	sys_x = map_data.at(1) * 100;
+	sys_y = map_data.at(2) * 100;
 
 	map_mutex.unlock();
 }
@@ -123,11 +121,15 @@ int main(int argc, char **argv)
 
 	// ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	// ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
+	width = 5 * 100;
+	height = 3 * 100;
 
 	while(ros::ok){
 
+		ros::spinOnce();
+
 		// Drawing Map Data
-		if (width > 0 && height >0)
+		if (width > 0 && height > 0)
 		{
 			cv::Mat map = cv::Mat::zeros(height, width, CV_8UC3);
 
@@ -192,7 +194,6 @@ int main(int argc, char **argv)
 
 	**/
 		loop_rate.sleep();
-		ros::spinOnce();
 	}
 
 	return 0;

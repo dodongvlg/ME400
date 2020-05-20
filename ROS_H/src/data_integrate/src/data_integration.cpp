@@ -2,8 +2,8 @@
 
 Data Integration Node
 KAIST ME400 Team H
-Last modified by Gunwoo Park, 2020. 04. 29.
-Version 1 : Implemented Map Reconstruction
+Last modified by Gunwoo Park, 2020. 05. 20.
+Version 2 : Stabilized Map Reconstruction
 
 This code is composed with init, loop, and two callback parts.
 
@@ -49,19 +49,25 @@ Callback : Executes every time the subscriber recieves the message.
 
 #define DEG(x) ((x)*180./M_PI)
 #define RAD(x) ((x)*M_PI/180)
+#define ENTER 0
+#define STAGE 1
 
 boost::mutex map_mutex;
 
 // Global Variables for Lidar
-const int n_lidar = 360;
-float lidar_angle[n_lidar];
-float lidar_distance[n_lidar];
+const int n_ldr = 360;
+float lidar_angle[n_ldr];
+float lidar_distance[n_ldr];
 
 // Global Variables for Camera
 int ball_number;
 float ball_X[20];
 float ball_Y[20];
 float ball_distance[20];
+
+// Matrix rotation
+// Input : 2x2 matrix to rotate
+// Output : 2x2 matrix rotated
 
 Eigen::Matrix<float, 2, 2> calc_rotmat(int theta) {
 	Eigen::Matrix<float, 2, 2> rotmat;
@@ -72,43 +78,90 @@ Eigen::Matrix<float, 2, 2> calc_rotmat(int theta) {
 	return rotmat;
 }
 
-float *calc_dim(float *map_dim, Eigen::Matrix<float, 2, n_lidar> ldrxy) {
-	int i_lidar;
+// Map dimension calculation
+// Input : address to return, laserscan coordinates
+// Output : array with map dimensions
+float *calc_map(float *map_dim, Eigen::Matrix<float, 2, n_ldr> ldrxy) {
+	int i_ldr;
+	float ldr_x, ldr_y;
 	float min_x = 0;
 	float min_y = 0;
 	float max_x = 0;
 	float max_y = 0;
 
-	for (i_lidar = 0; i_lidar < n_lidar; i_lidar++) {
-		if (ldrxy(0, i_lidar) < min_x) min_x = ldrxy(0, i_lidar);
-		if (ldrxy(0, i_lidar) > max_x) max_x = ldrxy(0, i_lidar);
-		if (ldrxy(1, i_lidar) < min_y) min_y = ldrxy(1, i_lidar);
-		if (ldrxy(1, i_lidar) > max_y) max_y = ldrxy(1, i_lidar);
+	for (i_ldr = 0; i_ldr < n_ldr; i_ldr++) {
+		ldr_x = ldrxy(0, i_ldr);
+		ldr_y = ldrxy(1, i_ldr);
+		if (ldr_x < min_x) min_x = ldr_x;
+		if (ldr_x > max_x) max_x = ldr_x;
+		if (ldr_y < min_y) min_y = ldr_y;
+		if (ldr_y > max_y) max_y = ldr_y;
 	}
 
 	map_dim[0] = (max_x - min_x)*(max_y - min_y);
-	map_dim[1] = max_x - min_x;
-	map_dim[2] = max_y - min_y;
-	map_dim[3] = - min_x;
-	map_dim[4] = - min_y;
+	map_dim[1] = max_x - min_x; // width
+	map_dim[2] = max_y - min_y; // height
+	map_dim[3] = - min_x; // system x coordinate
+	map_dim[4] = - min_y; // system y coordinate
 	return map_dim;
 }
 
+// Near point count (on x-axis)
+// Input : laserscan coordinates, reference, threshold
+// Output : number of laserscan points that is close to the reference
+int count_x(Eigen::Matrix<float, 2, n_ldr> ldrxy, float x_ref, float thr) {
+	int i_ldr, count;
+	float x_ldr;
+	count = 0;
+	for (i_ldr = 0; i_ldr < n_ldr; i_ldr++) {
+		x_ldr = ldrxy(0, i_ldr);
+		if (abs(x_ldr - x_ref) < thr) count++;
+	}
+	return count;
+}
+
+// Near point count (on x-axis)
+// Input : laserscan coordinates, reference, threshold
+// Output : number of laserscan points that is close to the reference
+float avg_x(Eigen::Matrix<float, 2, n_ldr> ldrxy, float x_ref, float thr) {
+	int i_ldr, count;
+	float x_ldr, sum;
+	count = 0;
+	sum = 0;
+	for (i_ldr = 0; i_ldr < n_ldr; i_ldr++) {
+		x_ldr = ldrxy(0, i_ldr);
+		if (abs(x_ldr - x_ref) < thr) {
+			sum += x_ldr;
+			count++;
+		}
+	}
+	if (!count) return -1;
+	return sum / count;
+}
+
+// Angular distance calculation
+// Input : two angles
+// Output : angular distance
+int calc_agl(int agl_1, int agl_2) {
+	if (abs(agl_1 - agl_2) > 180) return 360 - abs(agl_1 - agl_2);
+	return abs(agl_1 - agl_2);
+}
+
+// Callback 1 : Get array of distance and angle from lidar
 void lidar_Callback(const sensor_msgs::LaserScan::ConstPtr& scan) {
-	// Callback 1 : Get array of distance and angle from lidar
 	map_mutex.lock();
-	int i_lidar;
-	for(i_lidar = 0; i_lidar < n_lidar; i_lidar++)
+	int i_ldr;
+	for(i_ldr = 0; i_ldr < n_ldr; i_ldr++)
 	{
-		lidar_angle[i_lidar] = scan->angle_min + scan->angle_increment * i_lidar;
-		lidar_distance[i_lidar] = scan->ranges[i_lidar];
-		if (lidar_distance[i_lidar] > 3.5) lidar_distance[i_lidar] = 3.5;
+		lidar_angle[i_ldr] = scan->angle_min + scan->angle_increment * i_ldr;
+		lidar_distance[i_ldr] = scan->ranges[i_ldr];
+		if (lidar_distance[i_ldr] > 3.5) lidar_distance[i_ldr] = 3.5;
 	}
 	map_mutex.unlock();
 }
 
+// Callback 2 : Get ball position from OpenCV
 void camera_Callback(const core_msgs::ball_position::ConstPtr& position) {
-	// Callback 2 : Get ball position from OpenCV
 	map_mutex.lock();
 	int count = position->size;
 	ball_number=count;
@@ -124,19 +177,21 @@ void camera_Callback(const core_msgs::ball_position::ConstPtr& position) {
 }
 
 
+// MAIN FUNCTION
 int main(int argc, char **argv)
 {
 	// Local Variables for main()
-	Eigen::Matrix<float, 2, n_lidar> ldrxy_raw, ldrxy_rot;
+	Eigen::Matrix<float, 2, n_ldr> ldrxy_raw, ldrxy_rot;
 	Eigen::Matrix<float, 2, 2> rotmat;
 
 	// Local Variables for loop 1
-	int i_lidar;
-	int theta, theta_step, theta_dir;
-	float area, area_min;
+	int i_ldr, blk, max_blk, cur_cnt, max_cnt;
+	int theta, theta_step, theta_dir, theta_prev;
+	int mode = STAGE; // ENTER == 0, STAGE == 1
+	float area, area_min, area_thresh, x_abs, y_abs, x_ref, x_prev, x_ldr, x_sum;
 	float map_dim[5];
 	float *map_ptr;
-	std::vector<double> map_data(5); 
+	std::vector<double> map_data(3);
 
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
@@ -149,46 +204,53 @@ int main(int argc, char **argv)
 	ros::Publisher pub_right_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/right_wheel_velocity_controller/command", 10);
 
 	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata", 16);
-	std_msgs::Float64MultiArray map_msg; // map_data : [theta, width, height, x, y]
+	std_msgs::Float64MultiArray map_msg; // map_data : [theta, x, y]
 
 	// Loop : Process data and Publish message every 200ms
+	area_thresh = 0;
+        theta_prev = 0;
+	x_prev = 0;
 	while(ros::ok){
 
-		// Loop 0 : Check if the sensor data input is sane
+		ros::spinOnce(); // Run callback functions
 
-		/**
-		for(int i = 0; i < lidar_size; i++
-		{
-			std::cout << "degree : "<< lidar_angle[i];
-			std::cout << "   distance : "<< lidar_distance[i]<<std::endl;
-		}
-		for(int i = 0; i < ball_number; i++)
-		{
-			std::cout << "ball_X : "<< ball_X[i];
-			std::cout << "ball_Y : "<< ball_Y[i]<<std::endl;
-		}
-		**/
+		// Loop O : Map Reconstruction
+		blk = 0;
+		max_blk = 0;
 
-		// Loop 1 : Map Reconstruction
-		for (i_lidar = 0; i_lidar < n_lidar; i_lidar++) {
-			ldrxy_raw(0, i_lidar) = lidar_distance[i_lidar]*cos(lidar_angle[i_lidar]);
-			ldrxy_raw(1, i_lidar) = lidar_distance[i_lidar]*sin(lidar_angle[i_lidar]);
+		// Check if the lidar is blocked, to be removed if the model replaced to teamH vehicle
+		for (i_ldr = 0; i_ldr < n_ldr; i_ldr++) {
+			ldrxy_raw(0, i_ldr) = lidar_distance[i_ldr]*cos(lidar_angle[i_ldr]);
+			ldrxy_raw(1, i_ldr) = lidar_distance[i_ldr]*sin(lidar_angle[i_ldr]);
+			if (lidar_distance[i_ldr] < 0.3) {
+				blk++;
+			}
+			else {
+				if (blk > max_blk) max_blk = blk;
+				blk = 0;
+			}
 		}
-		
-		theta = 0;
+		if (max_blk > 30) {
+			std::cout << "BLK : " << max_blk << std::endl;
+			loop_rate.sleep();
+			continue; // If lidar is blocked too much just continue to next loop
+		}
+
+		// Optimization loop for theta
+		theta = 45;
 		theta_step = 16; // DEG
 		while (theta_step >= 1) {
 			// Check area of theta
 			rotmat = calc_rotmat(theta);
 			ldrxy_rot = rotmat*ldrxy_raw;
-			map_ptr = calc_dim(map_dim, ldrxy_rot);
+			map_ptr = calc_map(map_dim, ldrxy_rot);
 			area_min = map_ptr[0];
 			theta_dir = 0;
 			
 			// Check area of theta - step
 			rotmat = calc_rotmat(theta - theta_step);
 			ldrxy_rot = rotmat*ldrxy_raw;
-			map_ptr = calc_dim(map_dim, ldrxy_rot);
+			map_ptr = calc_map(map_dim, ldrxy_rot);
 			if (map_ptr[0] < area_min) {
 				area = area_min;
 				theta_dir = -1;
@@ -197,7 +259,7 @@ int main(int argc, char **argv)
 			// Check area of theta + step
 			rotmat = calc_rotmat(theta + theta_step);
 			ldrxy_rot = rotmat*ldrxy_raw;
-			map_ptr = calc_dim(map_dim, ldrxy_rot);
+			map_ptr = calc_map(map_dim, ldrxy_rot);
 			if (map_ptr[0] < area_min) {
 				area = area_min;
 				theta_dir = 1;
@@ -205,21 +267,74 @@ int main(int argc, char **argv)
 			theta += theta_dir*theta_step;
 			if (theta_dir == 0) theta_step = theta_step / 2;
 		}
-
+		theta = (theta + 360) % 360;
+		
 		rotmat = calc_rotmat(theta);
 		ldrxy_rot = rotmat*ldrxy_raw;
-		map_ptr = calc_dim(map_dim, ldrxy_rot);
-		map_data.at(0) = theta;
-		map_data.at(1) = map_ptr[1];
-		map_data.at(2) = map_ptr[2];
-		map_data.at(3) = map_ptr[3];
-		map_data.at(4) = map_ptr[4];
+		map_ptr = calc_map(map_dim, ldrxy_rot);
 
-		map_msg.data = map_data;
-		pub_map.publish(map_msg);
-		std::cout << map_data.at(0) << " " << map_data.at(1) << " " << map_data.at(2) << " " << map_data.at(3) << " " << map_data.at(4) << std::endl;
-	
-		// Loop 2 : Publish message to actuate the model
+		if (map_ptr[0] > area_thresh) mode = STAGE; // Mode transition
+
+		// Loop 1 : Branched navigation
+		if (mode) {
+
+			// Loop A : STAGE mode
+			// Loop A - 1 : Find exact direction and position again, trimming out the enterence area
+			if (map_ptr[1] < map_ptr[2]) {
+				theta += 90;
+				theta = theta % 360;
+				rotmat = calc_rotmat(theta);
+				ldrxy_rot = rotmat*ldrxy_raw;
+				map_ptr = calc_map(map_dim, ldrxy_rot);
+			}
+			if (calc_agl(theta, theta_prev) > calc_agl(theta + 180, theta_prev)) {
+				theta += 180;
+				theta = theta % 360;
+				rotmat = calc_rotmat(theta);
+				ldrxy_rot = rotmat*ldrxy_raw;
+				map_ptr = calc_map(map_dim, ldrxy_rot);
+			}
+			if (map_ptr[1] - map_ptr[3] < 3.4) {
+				std::cout << "Case 1 - ";
+				x_abs = 5 - (map_ptr[1] - map_ptr[3]);
+			}
+			else {
+				std::cout << "Case 2 - ";
+				// Coarsely find the wall position
+				x_abs = 0;
+				max_cnt = 0;
+				for (x_ref = 0; x_ref > - 1.6; x_ref -= 0.1) {
+					cur_cnt = count_x(ldrxy_rot, x_ref, 0.05);
+					if (cur_cnt > max_cnt) {
+						x_abs = - x_ref;
+						max_cnt = cur_cnt;
+					}
+				}
+				// Finely find the wall position
+				x_abs = - avg_x(ldrxy_rot, - x_abs, 0.05);
+				if (abs(x_abs - x_prev) > abs(x_abs - 1 - x_prev)) x_abs -= 1;
+
+			}
+			y_abs = map_ptr[4];
+			
+			map_data.at(0) = theta;
+			map_data.at(1) = x_abs;
+			map_data.at(2) = y_abs;
+
+			map_msg.data = map_data;
+			pub_map.publish(map_msg);
+			std::cout << map_data.at(0) << " " << map_data.at(1) << " " << map_data.at(2) << std::endl;
+			
+			theta_prev = theta;
+			x_prev = x_abs;
+			// Loop A-2 : Position objects on the map, to be implemented
+			// Loop A-3 : Find optimal global & local path, to be implemented
+		}
+		else {
+			// Loop B : ENTER MODE (entrance)
+		}
+
+		// Loop 2 : Publish message to actuate the model, to be implemented
 
 		/** 
 		std_msgs::Float64 left_wheel_msg;
@@ -234,7 +349,6 @@ int main(int argc, char **argv)
 		**/
 
 		loop_rate.sleep();
-		ros::spinOnce();
 	}
 
 	return 0;
