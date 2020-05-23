@@ -1,0 +1,17 @@
+toy_car:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100  
+
+  # Wheel Velocity Controller ---------------------------------------
+  joint_vel_controller:
+    type: velocity_controllers/JointGroupVelocityController
+    joints: 
+      - front_left_wheel_joint
+      - front_right_wheel_joint
+    gains:
+      front_left_wheel_joint : {p: 100.0, i: 0.01, d: 10.0}
+      front_right_wheel_joint : {p: 100.0, i: 0.01, d: 10.0}
+
+  #to be added suspension controllers
