@@ -14,12 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   core_msgs
 )
 
-find_package(cmake_modules REQUIRED)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-find_package(Eigen REQUIRED)
-include_directories(${Eigen_INCLUDE_DIRS})
 find_package(OpenCV REQUIRED )
-
 catkin_package(
 #  INCLUDE_DIRS include
 #  CATKIN_DEPENDS roscpp
@@ -27,7 +22,6 @@ catkin_package(
 #  std_msgs
 #  core_msgs
 #  DEPENDS system_lib
-  DEPENDS Eigen
 )
 
 ###########
@@ -45,11 +39,11 @@ include_directories(
 add_executable(data_show_node src/data_show.cpp)
 add_dependencies(data_show_node core_msgs_generate_messages_cpp)
 
-add_executable(data_integration_node src/data_integration.cpp)
-add_dependencies(data_integration_node core_msgs_generate_messages_cpp)
+add_executable(data_integation_node src/data_integration.cpp)
+add_dependencies(data_integation_node core_msgs_generate_messages_cpp)
 target_link_libraries(data_show_node
-  ${catkin_LIBRARIES} ${OpenCV_LIBS} ${cv_bridge_LIBRARIES} ${Eigen_LIBRARIES}
+  ${catkin_LIBRARIES} ${OpenCV_LIBS} ${cv_bridge_LIBRARIES}
 )
-target_link_libraries(data_integration_node
+target_link_libraries(data_integation_node
   ${catkin_LIBRARIES} ${OpenCV_LIBS} ${cv_bridge_LIBRARIES}
 )
