@@ -157,7 +157,10 @@ obstacle_list = [[4,1.5], [5.5,0.7], [5.5,2.3], [7,1.5]]
 spd = 3
 motor_cmd_topic_name = '/toy_car/joint_vel_controller/command'
 [p_gain, i_gain, d_gain] = [6, 0, 0]
-end = [7.4,1.77]
+x_end = float(input("Enter x_coordinate of destination coordinate within (3~8): "))
+y_end = float(input("Enter x_coordinate of destination coordinate within (0~3): "))
+end = [x_end, y_end]
+#end = [7.4,1.77]
 #also change r, l_cr inside div_path
 #r = 0.1
 
@@ -201,7 +204,7 @@ while not rospy.is_shutdown():
     if path_v[1] < 0:
       path_angle = 2*pi - path_angle
     e = car[2] - path_angle
-    print('error: ', e)
+    #print('error: ', e)
     if e > pi:
       e = e - 2*pi
     if e < -pi:
@@ -209,25 +212,32 @@ while not rospy.is_shutdown():
     e_i = e_i + e
     e_d = e - e_old
     result = (e*p_gain + e_i*i_gain + e_d*d_gain)
-    print('result: ', result)
+    #print('result: ', result)
     motor_cmd.data = [(spd + result), (spd - result)]
+    '''
     if k % 20 == 0:
       print('motor_cmd: ', motor_cmd.data)
       print('car: ', car)
       print('..')
+    '''
     pub.publish(motor_cmd)
     e = e_old
     rate.sleep()
   motor_cmd.data = [0,0]
+  pub.publish(motor_cmd)
+  print("Desired destination: ", end, "    car_pos: ", car)
+  print("..")
+  x_end = float(input("Enter x_coordinate of destination coordinate within (3~8): "))
+  y_end = float(input("Enter x_coordinate of destination coordinate within (0~3): "))
+  end = [x_end, y_end]
   if k % 20 == 0:
     print('motor_cmd: ', motor_cmd.data)
     print('car: ', car)
     print('..')
   k = k + 1
-  pub.publish(motor_cmd)
   rate.sleep()
 
-
+'''
   #draw current path_planning
   plt.clf()
   x = []
@@ -251,7 +261,7 @@ while not rospy.is_shutdown():
     plt.plot(xx,yy2)
   plt.axis('equal')
   plt.draw()
-
+'''
 
 		
 
