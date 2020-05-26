@@ -43,9 +43,9 @@ def find_intersection(start,end,obstacle,r):
 #if yes, return [True, 0] 
 #else, return [False, mid_path]
 def div_path(start, end, obstacle, real_end):
-  l_cr = 0.4/3
   r = 0.4
-  
+  l_cr = r/3
+
   #circle (x-A)^2 + (y-B)^2 = r^2
   X = obstacle[0]
   Y = obstacle[1]
@@ -154,11 +154,11 @@ car = [0, 0, 0]
 obstacle_list = [[4,1.5], [5.5,0.7], [5.5,2.3], [7,1.5]]
 
 #parameters to adjust
-spd = 3
+spd = 7
 motor_cmd_topic_name = '/toy_car/joint_vel_controller/command'
-[p_gain, i_gain, d_gain] = [6, 0, 0]
+[p_gain, i_gain, d_gain] = [6, 0.03, 0]
 x_end = float(input("Enter x_coordinate of destination coordinate within (3~8): "))
-y_end = float(input("Enter x_coordinate of destination coordinate within (0~3): "))
+y_end = float(input("Enter y_coordinate of destination coordinate within (0~3): "))
 end = [x_end, y_end]
 #end = [7.4,1.77]
 #also change r, l_cr inside div_path
@@ -214,12 +214,12 @@ while not rospy.is_shutdown():
     result = (e*p_gain + e_i*i_gain + e_d*d_gain)
     #print('result: ', result)
     motor_cmd.data = [(spd + result), (spd - result)]
-    '''
+
     if k % 20 == 0:
       print('motor_cmd: ', motor_cmd.data)
       print('car: ', car)
       print('..')
-    '''
+
     pub.publish(motor_cmd)
     e = e_old
     rate.sleep()
