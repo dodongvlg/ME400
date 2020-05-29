@@ -4,7 +4,7 @@ And some pictures show what object or project file it is come together
 How to use
 
     1. Download the file .urdf or .py
-    2. Replace with them of path_planning.py and toy_car.urdf who made by Chan-kyu in ROS folder.
+    2. Replace with them of path_planning.py and toy_car.urdf which made by Chan-kyu in ROS folder.
 
 Name 
 
