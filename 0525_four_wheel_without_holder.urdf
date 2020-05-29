@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="toy_car">
+
+<!--Replaced base link --> 
+
+  <link name="base_link">
+    <inertial>
+      <origin
+        xyz="0.11051 0.056657 0.15073"
+        rpy="0 0 0" />
+      <mass
+        value="3.009" />
+      <inertia
+        ixx="0.0060171"
+        ixy="-1.5807E-06"
+        ixz="1.4125E-06"
+        iyy="0.009034"
+        iyz="3.2211E-07"
+        izz="0.0038841" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+<!-- This case will be repeated four times -->
+
+
+  <link name="front_left_suspension">
+    <inertial>
+      <origin
+        xyz="-0.002691 -0.0093493 0.020223"
+        rpy="0 0 0" />
+      <mass
+        value="0.067818" />
+      <inertia
+        ixx="2.1147E-05"
+        ixy="-2.9194E-07"
+        ixz="-1.3828E-07"
+        iyy="1.0279E-05"
+        iyz="7.5387E-07"
+        izz="1.663E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_suspension.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_suspension.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_left_suspension_joint" type="revolute">
+    <origin
+      xyz="0.0068751 -0.31978 0.076269"
+      rpy="-1.9199 0.17453 -3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_left_suspension" />
+    <axis
+      xyz="0 1 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.1" friction="0.3"/>
+  </joint>
+
+  <link name="front_left_wheel_case">
+    <inertial>
+      <origin
+        xyz="0.025003 -0.048615 -0.035961"
+        rpy="0 0 0" />
+      <mass
+        value="0.39081" />
+      <inertia
+        ixx="0.0007858"
+        ixy="-2.9641E-09"
+        ixz="1.6485E-08"
+        iyy="0.00039594"
+        iyz="-3.5931E-05"
+        izz="0.00054805" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_wheel_case.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_wheel_case.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_left_wheel_case_joint" type="revolute">
+    <origin
+      xyz="0.023482 -0.027982 0.084083"
+      rpy="-0.34417 -0.059426 2.9774" />
+    <parent
+      link="front_left_suspension" />
+    <child
+      link="front_left_wheel_case" />
+    <axis
+      xyz="0 0 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.8" friction="0.3"/>
+  </joint>
+
+  <link name="front_left_wheel">
+    <inertial>
+      <origin
+        xyz="-5.2042E-18 0 0.02"
+        rpy="0 0 0" />
+      <mass
+        value="0.389" />
+      <inertia
+        ixx="0.00072452"
+        ixy="1.6941E-21"
+        ixz="-1.1092E-20"
+        iyy="0.00072452"
+        iyz="5.1226E-22"
+        izz="0.0013777" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_left_wheel_joint" type="continuous">
+    <origin
+      xyz="0.025 -0.093 -0.05765"
+      rpy="0 0 0.022928" />
+    <parent
+      link="front_left_wheel_case" />
+    <child
+      link="front_left_wheel" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+<!-- 2 -->
+
+  <link name="front_right_suspension">
+    <inertial>
+      <origin
+        xyz="-0.0026576 -0.0093548 -0.020221"
+        rpy="0 0 0" />
+      <mass
+        value="0.067818" />
+      <inertia
+        ixx="2.1135E-05"
+        ixy="-3.2305E-07"
+        ixz="1.4338E-07"
+        iyy="1.0289E-05"
+        iyz="-7.5674E-07"
+        izz="1.663E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_suspension.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_suspension.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_right_suspension_joint" type="revolute">
+    <origin
+      xyz="0.0058738 0.02188 0.081948"
+      rpy="-1.2217 0.17453 -3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_right_suspension" />
+    <axis
+      xyz="0 1 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.1" friction="0.3"/>
+  </joint>
+
+  <link name="front_right_wheel_case">
+    <inertial>
+      <origin
+        xyz="0.025003 -0.048615 -0.035961"
+        rpy="0 0 0" />
+      <mass
+        value="0.39081" />
+      <inertia
+        ixx="0.0007858"
+        ixy="-2.9641E-09"
+        ixz="1.6485E-08"
+        iyy="0.00039594"
+        iyz="-3.5931E-05"
+        izz="0.00054805" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_wheel_case.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_wheel_case.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_right_wheel_case_joint" type="revolute">
+    <origin
+      xyz="-0.02576 -0.019823 -0.087053"
+      rpy="2.7974 -0.059426 -0.1642" />
+    <parent
+      link="front_right_suspension" />
+    <child
+      link="front_right_wheel_case" />
+    <axis
+      xyz="0 0 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.8" friction="0.3"/>
+
+  </joint>
+
+  <link name="front_right_wheel">
+    <inertial>
+      <origin
+        xyz="-1.7347E-18 6.9389E-18 0.02"
+        rpy="0 0 0" />
+      <mass
+        value="0.389" />
+      <inertia
+        ixx="0.00072452"
+        ixy="-1.1858E-20"
+        ixz="2.1113E-20"
+        iyy="0.00072452"
+        iyz="1.6032E-19"
+        izz="0.0013777" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_right_wheel_joint" type="continuous">
+    <origin
+      xyz="0.025 -0.093 -0.05765"
+      rpy="0 0 0.022566" />
+    <parent
+      link="front_right_wheel_case" />
+    <child
+      link="front_right_wheel" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+<!-- 3 -->
+
+
+  <link name="rear_left_suspension">
+    <inertial>
+      <origin
+        xyz="0.0026576 -0.0093548 0.020221"
+        rpy="0 0 0" />
+      <mass
+        value="0.067818" />
+      <inertia
+        ixx="2.1135E-05"
+        ixy="3.2304E-07"
+        ixz="1.4338E-07"
+        iyy="1.029E-05"
+        iyz="7.5671E-07"
+        izz="1.663E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_left_suspension.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_left_suspension.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rear_left_suspension_joint" type="revolute">
+    <origin
+      xyz="0.2131 -0.31972 0.076111"
+      rpy="-1.9199 -0.17453 3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="rear_left_suspension" />
+    <axis
+      xyz="0 1 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.1" friction="0.3"/>
+  </joint>
+
+  <link name="rear_left_wheel_case">
+    <inertial>
+      <origin
+        xyz="0.025003 -0.048615 -0.035961"
+        rpy="0 0 0" />
+      <mass
+        value="0.39081" />
+      <inertia
+        ixx="0.0007858"
+        ixy="-2.9641E-09"
+        ixz="1.6485E-08"
+        iyy="0.00039594"
+        iyz="-3.5931E-05"
+        izz="0.00054805" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_left_wheel_case.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_left_wheel_case.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rear_left_wheel_case_joint" type="revolute">
+    <origin
+      xyz="0.02576 -0.019823 0.087053"
+      rpy="-0.34417 0.059426 -2.9774" />
+    <parent
+      link="rear_left_suspension" />
+    <child
+      link="rear_left_wheel_case" />
+    <axis
+      xyz="0 0 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.8" friction="0.3"/>
+  </joint>
+
+  <link name="rear_left_wheel">
+    <inertial>
+      <origin
+        xyz="0 3.4694E-18 0.02"
+        rpy="0 0 0" />
+      <mass
+        value="0.389" />
+      <inertia
+        ixx="0.00072452"
+        ixy="3.3881E-21"
+        ixz="-1.8234E-21"
+        iyy="0.00072452"
+        iyz="3.023E-22"
+        izz="0.0013777" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_left_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_left_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rear_left_wheel_joint" type="continuous">
+    <origin
+      xyz="0.025 -0.093 -0.05765"
+      rpy="0 0 0.022928" />
+    <parent
+      link="rear_left_wheel_case" />
+    <child
+      link="rear_left_wheel" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+<!-- 4 -->
+
+
+  <link name="rear_right_suspension">
+    <inertial>
+      <origin
+        xyz="0.002691 -0.0093493 -0.020223"
+        rpy="0 0 0" />
+      <mass
+        value="0.067818" />
+      <inertia
+        ixx="2.1147E-05"
+        ixy="2.9193E-07"
+        ixz="-1.3828E-07"
+        iyy="1.0279E-05"
+        iyz="-7.5391E-07"
+        izz="1.663E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_right_suspension.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_right_suspension.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rear_right_suspension_joint" type="revolute">
+    <origin
+      xyz="0.2146 0.022879 0.08465"
+      rpy="-1.2217 -0.17453 -3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="rear_right_suspension" />
+    <axis
+      xyz="0 1 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.1" friction="0.3"/>
+  </joint>
+
+  <link name="rear_right_wheel_case">
+    <inertial>
+      <origin
+        xyz="0.025003 -0.048615 -0.035961"
+        rpy="0 0 0" />
+      <mass
+        value="0.39081" />
+      <inertia
+        ixx="0.0007858"
+        ixy="-2.9641E-09"
+        ixz="1.6485E-08"
+        iyy="0.00039594"
+        iyz="-3.5931E-05"
+        izz="0.00054805" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_right_wheel_case.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_right_wheel_case.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rear_right_wheel_case_joint" type="revolute">
+    <origin
+      xyz="-0.023482 -0.027982 -0.084083"
+      rpy="2.7974 0.059426 0.1642" />
+    <parent
+      link="rear_right_suspension" />
+    <child
+      link="rear_right_wheel_case" />
+    <axis
+      xyz="0 0 1" />
+    <limit lower="-0.01" upper="0.01" effort="4" velocity="0.5"/>
+    <dynamics damping="0.8" friction="0.3"/>
+  </joint>
+
+  <link name="rear_right_wheel">
+    <inertial>
+      <origin
+        xyz="0 0 0.02"
+        rpy="0 0 0" />
+      <mass
+        value="0.389" />
+      <inertia
+        ixx="0.00072452"
+        ixy="-1.6941E-21"
+        ixz="3.2856E-20"
+        iyy="0.00072452"
+        iyz="-1.2508E-20"
+        izz="0.0013777" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_right_wheel.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/rear_right_wheel.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rear_right_wheel_joint" type="continuous">
+    <origin
+      xyz="0.025 -0.093 -0.05765"
+      rpy="0 0 0.022566" />
+    <parent
+      link="rear_right_wheel_case" />
+    <child
+      link="rear_right_wheel" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+
+
+<!-- Transmission -->
+
+  <transmission name="tran_left_wheel">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_left_wheel_joint">
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor1">
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran_right_wheel">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_right_wheel_joint">
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor2">
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/toy_car</robotNamespace>
+    </plugin>
+  </gazebo>
+
+</robot>
