@@ -10,12 +10,18 @@ List
     
     Try it by replacing 'map_final_ball.world' in map_generate folder
     
-   2. ToyCar_GoodToTest.launch 
+   2. test_world_image.png
+   
+     Reference image for test.world
+    
+   3. ToyCar_GoodToTest.launch 
    
     This launch file is revised one of toycar launch file.
     I rotate a car spwan 180 degrees and move along -y direction good to test in convenient way.
     
     Try it by replacing 'two_spawn_control.launch' in toycar package in ROS folder
      
-   3. 
+   4. ToyCar_GoodToTest_spawned_image.png
+   
+    Reference image for ToyCar_GoodToTest.launch
 
