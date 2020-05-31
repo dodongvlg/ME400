@@ -1,13 +1,15 @@
 <launch>
-  <arg name="x_pos" default="3.5"/>
-  <arg name="y_pos" default="0.86"/>
+  <arg name="x_pos" default="3.2"/>
+  <arg name="y_pos" default="0.4"/>
   <arg name="z_pos" default="0.62"/>
+  <arg name="180_degree" default="3.14"/>
 
   <!-- Load the model into the ROS Parameter Server -->
   <param name="robot_description" 
    textfile="$(find toy_car)/urdf/toy_car2.urdf" />
 
-  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model toy_car -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model toy_car -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) 
+	-Y $(arg 180_degree)  -param robot_description" />
 
   <!-- Load joint controller configurations from YAML file to parameter server -->
   <rosparam file="$(find toy_car)/config/toy_car_control2.yaml" command="load"/>
