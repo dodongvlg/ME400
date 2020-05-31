@@ -14,6 +14,8 @@ List
    
     This launch file is revised one of toycar2.launch file.
     I rotate a car spwan 180 degrees and move along -y direction good to test in convenient way.
+    
+    Try it by replacing 'two_spawn_control.launch' in toycar package in ROS folder
      
    3. 
 
