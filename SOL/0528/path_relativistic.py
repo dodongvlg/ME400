@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 from __future__ import division
 import rospy
-#from std_msgs.msg import String
+from std_msgs.msg import String
 from std_msgs.msg import Float64MultiArray
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
