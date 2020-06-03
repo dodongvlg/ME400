@@ -24,4 +24,9 @@ List
    4. ToyCar_GoodToTest_spawned_image.png
    
     Reference image for ToyCar_GoodToTest.launch
+    
+   5. path_planning_fixed1.py
+   
+    Coordinate has singularity when x coordinate of start and end is same.
+    I fixed it for convenience.
 
