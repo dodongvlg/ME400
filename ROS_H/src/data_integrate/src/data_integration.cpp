@@ -1,8 +1,8 @@
 /*
 Data Integration Node
 KAIST ME400 Team H
-Last modified by Gunwoo Park, 2020. 05. 20.
-Version 2 : Stabilized Map Reconstruction
+Last modified by Gunwoo Park, 2020. 06. 02.
+Version 3 : Implemented Mode and Entrance Data Processing
 This code is composed with init, loop, and two callback parts.
 Init : Executes once if the node starts to run.
 Loop : Executes periodically during the node runtime.
@@ -116,7 +116,7 @@ int count_x(Eigen::Matrix<float, 2, n_ldr> ldrxy, float x_ref, float thr) {
 	return count;
 }
 
-// Near point count (on x-axis)
+// Near point average (on x-axis)
 // Input : laserscan coordinates, reference, threshold
 // Output : number of laserscan points that is close to the reference
 float avg_x(Eigen::Matrix<float, 2, n_ldr> ldrxy, float x_ref, float thr) {
@@ -181,13 +181,15 @@ int main(int argc, char **argv)
 	Eigen::Matrix<float, 2, 2> rotmat;
 
 	// Local Variables for loop 1
-	int i_ldr, blk, max_blk, cur_cnt, max_cnt;
-	int theta, theta_step, theta_dir, theta_prev;
-	int mode = STAGE; // ENTER == 0, STAGE == 1
-	float area, area_min, area_thresh, x_abs, y_abs, x_ref, x_prev, x_ldr, x_sum;
+	int i_ldr, cur_cnt, max_cnt;
+	int ent_cnt, ent_avg, ent_cnts, ent_avgs, ent_thresh; // For entrance navigation
+	int theta, theta_step, theta_dir, theta_prev, theta_offset; // For theta optimization
+	int mode = ENTER; // ENTER == 0, STAGE == 1
+	float area, area_min, x_abs, y_abs, x_ref, x_max, x_prev, y_prev, x_ldr, x_sum; // Map parameters
 	float map_dim[5];
 	float *map_ptr;
 	std::vector<double> map_data(3);
+	std::vector<double> obj_data(20);
 
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
@@ -202,80 +204,76 @@ int main(int argc, char **argv)
 	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata", 16);
 	std_msgs::Float64MultiArray map_msg; // map_data : [theta, x, y]
 
-	// Loop : Process data and Publish message every 200ms
-	area_thresh = 0;
+	ent_thresh = 50;
         theta_prev = 0;
-	x_prev = 0;
+	x_prev = -0.25;
+	y_prev = 0.5;
+	theta_offset = 180;
+
+	// Loop : Process data and Publish message every 200ms
 	while(ros::ok){
 
 		ros::spinOnce(); // Run callback functions
 
-		// Loop O : Map Reconstruction
-		blk = 0;
-		max_blk = 0;
-
-		// Check if the lidar is blocked, to be removed if the model replaced to teamH vehicle
-		for (i_ldr = 0; i_ldr < n_ldr; i_ldr++) {
-			ldrxy_raw(0, i_ldr) = lidar_distance[i_ldr]*cos(lidar_angle[i_ldr]);
-			ldrxy_raw(1, i_ldr) = lidar_distance[i_ldr]*sin(lidar_angle[i_ldr]);
-			if (lidar_distance[i_ldr] < 0.3) {
-				blk++;
-			}
-			else {
-				if (blk > max_blk) max_blk = blk;
-				blk = 0;
+		// Check whether the vehicle entered the stage
+		ent_cnt = 0;
+		for (i_ldr = 90; i_ldr < n_ldr - 90; i_ldr++) {
+			// Consider 180 deg front
+			if (lidar_distance[i_ldr] > 3) {
+				ent_cnt++;
 			}
 		}
-		if (max_blk > 30) {
-			std::cout << "BLK : " << max_blk << std::endl;
-			loop_rate.sleep();
-			continue; // If lidar is blocked too much just continue to next loop
-		}
-
-		// Optimization loop for theta
-		theta = 45;
-		theta_step = 16; // DEG
-		while (theta_step >= 1) {
-			// Check area of theta
-			rotmat = calc_rotmat(theta);
-			ldrxy_rot = rotmat*ldrxy_raw;
-			map_ptr = calc_map(map_dim, ldrxy_rot);
-			area_min = map_ptr[0];
-			theta_dir = 0;
-			
-			// Check area of theta - step
-			rotmat = calc_rotmat(theta - theta_step);
-			ldrxy_rot = rotmat*ldrxy_raw;
-			map_ptr = calc_map(map_dim, ldrxy_rot);
-			if (map_ptr[0] < area_min) {
-				area = area_min;
-				theta_dir = -1;
-			}
-			
-			// Check area of theta + step
-			rotmat = calc_rotmat(theta + theta_step);
-			ldrxy_rot = rotmat*ldrxy_raw;
-			map_ptr = calc_map(map_dim, ldrxy_rot);
-			if (map_ptr[0] < area_min) {
-				area = area_min;
-				theta_dir = 1;
-			}
-			theta += theta_dir*theta_step;
-			if (theta_dir == 0) theta_step = theta_step / 2;
-		}
-		theta = (theta + 360) % 360;
-		
-		rotmat = calc_rotmat(theta);
-		ldrxy_rot = rotmat*ldrxy_raw;
-		map_ptr = calc_map(map_dim, ldrxy_rot);
-
-		if (map_ptr[0] > area_thresh) mode = STAGE; // Mode transition
+		if (ent_cnt > ent_thresh) mode = STAGE; // Mode transition
+		std::cout << "Current sight : " << ent_cnt << " mode : " << mode << std::endl;
 
 		// Loop 1 : Branched navigation
 		if (mode) {
 
 			// Loop A : STAGE mode
 			// Loop A - 1 : Find exact direction and position again, trimming out the enterence area
+
+			for (i_ldr = 0; i_ldr < n_ldr; i_ldr++) {
+				ldrxy_raw(0, i_ldr) = lidar_distance[i_ldr]*cos(lidar_angle[i_ldr] + RAD(theta_offset));
+				ldrxy_raw(1, i_ldr) = lidar_distance[i_ldr]*sin(lidar_angle[i_ldr] + RAD(theta_offset));
+			}
+
+			// Optimization loop for theta
+			theta = 45;
+			theta_step = 16; // DEG
+			while (theta_step >= 1) {
+				// Check area of theta
+				rotmat = calc_rotmat(theta);
+				ldrxy_rot = rotmat*ldrxy_raw;
+				map_ptr = calc_map(map_dim, ldrxy_rot);
+				area_min = map_ptr[0];
+				theta_dir = 0;
+				
+				// Check area of theta - step
+				rotmat = calc_rotmat(theta - theta_step);
+				ldrxy_rot = rotmat*ldrxy_raw;
+				map_ptr = calc_map(map_dim, ldrxy_rot);
+				if (map_ptr[0] < area_min) {
+					area = area_min;
+					theta_dir = -1;
+				}
+				
+				// Check area of theta + step
+				rotmat = calc_rotmat(theta + theta_step);
+				ldrxy_rot = rotmat*ldrxy_raw;
+				map_ptr = calc_map(map_dim, ldrxy_rot);
+				if (map_ptr[0] < area_min) {
+					area = area_min;
+					theta_dir = 1;
+				}
+				theta += theta_dir*theta_step;
+				if (theta_dir == 0) theta_step = theta_step / 2;
+			}
+			theta = (theta + 360) % 360;
+			
+			rotmat = calc_rotmat(theta);
+			ldrxy_rot = rotmat*ldrxy_raw;
+			map_ptr = calc_map(map_dim, ldrxy_rot);
+
 			if (map_ptr[1] < map_ptr[2]) {
 				theta += 90;
 				theta = theta % 360;
@@ -290,44 +288,82 @@ int main(int argc, char **argv)
 				ldrxy_rot = rotmat*ldrxy_raw;
 				map_ptr = calc_map(map_dim, ldrxy_rot);
 			}
-			if (map_ptr[1] - map_ptr[3] < 3.4) {
-				std::cout << "Case 1 - ";
-				x_abs = 5 - (map_ptr[1] - map_ptr[3]);
-			}
-			else {
-				std::cout << "Case 2 - ";
-				// Coarsely find the wall position
-				x_abs = 0;
-				max_cnt = 0;
-				for (x_ref = 0; x_ref > - 1.6; x_ref -= 0.1) {
-					cur_cnt = count_x(ldrxy_rot, x_ref, 0.05);
-					if (cur_cnt > max_cnt) {
-						x_abs = - x_ref;
-						max_cnt = cur_cnt;
-					}
-				}
-				// Finely find the wall position
-				x_abs = - avg_x(ldrxy_rot, - x_abs, 0.05);
-				if (abs(x_abs - x_prev) > abs(x_abs - 1 - x_prev)) x_abs -= 1;
 
+			// Coarsely find the wall position
+			x_abs = 0;
+			max_cnt = 0;
+			for (x_ref = -2.6; x_ref < 2.6; x_ref += 0.1) {
+				cur_cnt = count_x(ldrxy_rot, x_ref, 0.05);
+				if (cur_cnt > max_cnt) {
+					x_max = x_ref;
+					max_cnt = cur_cnt;
+				}
 			}
+			x_abs = - avg_x(ldrxy_rot, x_max, 0.05);
+			if (x_max > 0) {
+				x_abs += 5;
+			}
+			if (abs(x_abs - x_prev) > abs(x_abs - 1 - x_prev)) x_abs -= 1;
+
 			y_abs = map_ptr[4];
 			
+			if (abs(x_abs - x_prev) > 0.5 || abs(y_abs - y_prev) > 0.5 || (x_abs == 0 && y_abs == 0)) {
+				std::cout << "Error : x at " << x_abs << " y at " << y_abs << std::endl;
+				theta = theta_prev;
+				x_abs = x_prev;
+				y_abs = y_prev;
+			}
+
 			map_data.at(0) = theta;
 			map_data.at(1) = x_abs;
 			map_data.at(2) = y_abs;
 
 			map_msg.data = map_data;
 			pub_map.publish(map_msg);
-			std::cout << map_data.at(0) << " " << map_data.at(1) << " " << map_data.at(2) << std::endl;
+			std::cout << "t : " << map_data.at(0) << "\tx : " << map_data.at(1) << "\ty : " << map_data.at(2) << std::endl;
 			
 			theta_prev = theta;
 			x_prev = x_abs;
-			// Loop A-2 : Position objects on the map, to be implemented
-			// Loop A-3 : Find optimal global & local path, to be implemented
+			y_prev = y_abs;
+
+			// Loop A - 2 : Position objects on the map, to be implemented
+			
+			
+
+
+			// Loop A - 3 : Find optimal global & local path, to be implemented
 		}
 		else {
 			// Loop B : ENTER MODE (entrance)
+
+			ent_cnt = 0;
+			ent_avg = 0;
+			ent_cnts = 0;
+			ent_avgs = 0;
+			for (i_ldr = 90; i_ldr < n_ldr - 90; i_ldr++) {
+				// Consider 180 deg front
+				if (lidar_distance[i_ldr] > 1) {
+					ent_cnt++;
+					ent_avg += DEG(lidar_angle[i_ldr] - RAD(theta_offset));
+				}
+				else {
+					if (ent_cnt > ent_cnts) {
+						ent_cnts = ent_cnt;
+						ent_avgs = ent_avg;
+						ent_cnt = 0;
+						ent_avg = 0;
+					}
+				}
+			}
+			if (ent_cnt > ent_cnts) {
+				ent_cnts = ent_cnt;
+				ent_avgs = ent_avg;
+				ent_cnt = 0;
+				ent_avg = 0;
+			}
+			if (ent_cnts > 0) ent_avgs /= ent_cnts;
+			std::cout << "Entrance navigation should preceed on " << ent_avgs << std::endl;
+
 		}
 
 		loop_rate.sleep();
