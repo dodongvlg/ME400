@@ -3,22 +3,22 @@
      Commit Version:   Build Version: 1.5.7444.6699
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="toy_car">
+  name="toy_car2">
   <link
     name="base_link">
     <inertial>
       <origin
-        xyz="0.084297 -0.15059 0.046491"
+        xyz="-0.0429725676225381 -0.000267178599244661 0.0471298420442132"
         rpy="0 0 0" />
       <mass
-        value="3.4415" />
+        value="3.81368362259093" />
       <inertia
-        ixx="0.0094467"
-        ixy="-1.3422E-06"
-        ixz="-7.1648E-07"
-        iyy="0.0043003"
-        iyz="-3.3231E-07"
-        izz="0.012743" />
+        ixx="0.0114922800341374"
+        ixy="1.2059249165165E-06"
+        ixz="-1.88827417940258E-05"
+        iyy="0.0038360950287992"
+        iyz="2.87540667009997E-07"
+        izz="0.0146500038054547" />
     </inertial>
     <visual>
       <origin
@@ -31,7 +31,7 @@
       <material
         name="">
         <color
-          rgba="0.79216 0.81961 0.93333 1" />
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
       </material>
     </visual>
     <collision>
@@ -45,20 +45,134 @@
     </collision>
   </link>
   <link
+    name="front_left">
+    <inertial>
+      <origin
+        xyz="-2.42861286636753E-17 0.0153267239617477 -0.00621293030951706"
+        rpy="0 0 0" />
+      <mass
+        value="0.0211105794692306" />
+      <inertia
+        ixx="2.45369235482972E-06"
+        ixy="-2.07990699631126E-21"
+        ixz="3.78132321519841E-21"
+        iyy="6.08127961989931E-06"
+        iyz="3.66094605714796E-08"
+        izz="6.08949128777742E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_left_joint"
+    type="fixed">
+    <origin
+      xyz="-0.021 0.125 0.11499737041193"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_left" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="front_left_suspension">
+    <inertial>
+      <origin
+        xyz="1.41212986311881E-05 0.0045607206245718 -0.0195885393740494"
+        rpy="0 0 0" />
+      <mass
+        value="0.108487939485068" />
+      <inertia
+        ixx="2.53331074755856E-05"
+        ixy="-1.61707386962674E-08"
+        ixz="-5.78964187854019E-10"
+        iyy="2.81997784693636E-05"
+        iyz="-6.30799035396079E-07"
+        izz="1.37874536494029E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_suspension.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_left_suspension.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_left_suspension_joint"
+    type="prismatic">
+    <origin
+      xyz="0 0.0273428886495924 -0.07"
+      rpy="0.17453292519943 0 0" />
+    <parent
+      link="front_left" />
+    <child
+      link="front_left_suspension" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.03"
+      upper="0.03"
+      effort="1000"
+      velocity="1000" />
+    <dynamics
+      damping="0"
+      friction="0" />
+  </joint>
+  <link
     name="front_left_wheel">
     <inertial>
       <origin
-        xyz="7.3692E-19 4.3368E-19 0.02"
+        xyz="-2.08166817117217E-17 0.02 2.77555756156289E-17"
         rpy="0 0 0" />
       <mass
-        value="0.389" />
+        value="0.389004584885854" />
       <inertia
-        ixx="0.00072452"
-        ixy="-2.0835E-36"
-        ixz="8.5856E-21"
-        iyy="0.00072452"
-        iyz="-6.276E-36"
-        izz="0.0013777" />
+        ixx="0.000724516969122224"
+        ixy="-2.13604799360613E-19"
+        ixz="5.42655297253163E-20"
+        iyy="0.00137769204419062"
+        iyz="2.53222282423438E-18"
+        izz="0.000724516969122224" />
     </inertial>
     <visual>
       <origin
@@ -88,33 +202,147 @@
     name="front_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="1.2819E-05 -0.3265 -0.003"
-      rpy="1.5708 0 0" />
+      xyz="1.12457305640069E-05 0.0310624201259151 -0.0649811422108027"
+      rpy="-0.17453292519943 0 0" />
     <parent
-      link="base_link" />
+      link="front_left_suspension" />
     <child
       link="front_left_wheel" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 1 0" />
     <limit
       effort="3.1"
       velocity="7" />
   </joint>
   <link
+    name="front_right">
+    <inertial>
+      <origin
+        xyz="3.29597460435593E-17 -0.0153267239617477 -0.00621293030951707"
+        rpy="0 0 0" />
+      <mass
+        value="0.0211105794692306" />
+      <inertia
+        ixx="2.45369235482973E-06"
+        ixy="6.71998739664856E-22"
+        ixz="2.48729805711132E-21"
+        iyy="6.08127961989933E-06"
+        iyz="-3.6609460571481E-08"
+        izz="6.08949128777743E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_right_joint"
+    type="fixed">
+    <origin
+      xyz="-0.0210000000000001 -0.125 0.11499737041193"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_right" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="front_right_suspension">
+    <inertial>
+      <origin
+        xyz="-1.4121298631176E-05 -0.00456072062457182 -0.0195885393740494"
+        rpy="0 0 0" />
+      <mass
+        value="0.108487939485068" />
+      <inertia
+        ixx="2.53331074755856E-05"
+        ixy="-1.61707386962753E-08"
+        ixz="5.78964187846857E-10"
+        iyy="2.81997784693636E-05"
+        iyz="6.30799035396077E-07"
+        izz="1.37874536494029E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_suspension.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/front_right_suspension.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_right_suspension_joint"
+    type="prismatic">
+    <origin
+      xyz="0 -0.0273428886495923 -0.07"
+      rpy="-0.17453292519943 0 0" />
+    <parent
+      link="front_right" />
+    <child
+      link="front_right_suspension" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.03"
+      upper="0.03"
+      effort="1000"
+      velocity="1000" />
+    <dynamics
+      damping="0"
+      friction="0" />
+  </joint>
+  <link
     name="front_right_wheel">
     <inertial>
       <origin
-        xyz="7.5555E-19 0 -0.02"
+        xyz="3.46944695195361E-18 -0.02 -6.93889390390723E-17"
         rpy="0 0 0" />
       <mass
-        value="0.389" />
+        value="0.389004584885853" />
       <inertia
-        ixx="0.00072452"
-        ixy="-2.3946E-36"
-        ixz="8.5901E-21"
-        iyy="0.00072452"
-        iyz="-3.2551E-36"
-        izz="0.0013777" />
+        ixx="0.000724516969122223"
+        ixy="-2.0869319940662E-19"
+        ixz="6.07790807408048E-21"
+        iyy="0.00137769204419062"
+        iyz="2.54100205603488E-18"
+        izz="0.000724516969122223" />
     </inertial>
     <visual>
       <origin
@@ -144,33 +372,33 @@
     name="front_right_wheel_joint"
     type="continuous">
     <origin
-      xyz="-1.2819E-05 0.0265 -0.003"
-      rpy="1.5708 0 0" />
+      xyz="-1.1246E-05 -0.031062 -0.064981"
+      rpy="0.17453 0 0" />
     <parent
-      link="base_link" />
+      link="front_right_suspension" />
     <child
       link="front_right_wheel" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 1 0" />
     <limit
       effort="3.1"
       velocity="7" />
   </joint>
   <link
-    name="rear_left_caster">
+    name="rear_left">
     <inertial>
       <origin
-        xyz="0.0031981 -0.014913 -5.5511E-17"
+        xyz="0 8.32667268468867E-17 -0.0153728572796044"
         rpy="0 0 0" />
       <mass
-        value="0.0175" />
+        value="0.00600385822447067" />
       <inertia
-        ixx="3.687E-06"
-        ixy="2.9995E-07"
-        ixz="-8.2334E-24"
-        iyy="2.8932E-06"
-        iyz="6.1441E-22"
-        izz="1.983E-06" />
+        ixx="1.44009513612279E-06"
+        ixy="-6.21347011227668E-23"
+        ixz="-3.38630138596155E-23"
+        iyy="5.05998771239394E-07"
+        iyz="-2.62489462342665E-22"
+        izz="1.54583669239748E-06" />
     </inertial>
     <visual>
       <origin
@@ -178,65 +406,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/rear_left_caster.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.89804 0.91765 0.92941 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://toy_car/meshes/rear_left_caster.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="rear_left_caster_joint"
-    type="continuous">
-    <origin
-      xyz="0.22 -0.26 -0.0235"
-      rpy="1.5708 0 0" />
-    <parent
-      link="base_link" />
-    <child
-      link="rear_left_caster" />
-    <axis
-      xyz="0 1 0" />
-    <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
-  </joint>
-  <link
-    name="rear_left_caster_wheel">
-    <inertial>
-      <origin
-        xyz="0 0 -5.5511E-17"
-        rpy="0 0 0" />
-      <mass
-        value="0.025328" />
-      <inertia
-        ixx="3.8234E-06"
-        ixy="-3.1764E-22"
-        ixz="-1.7905E-22"
-        iyy="3.8234E-06"
-        iyz="2.7501E-22"
-        izz="6.5662E-06" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://toy_car/meshes/rear_left_caster_wheel.STL" />
+          filename="package://toy_car/meshes/rear_left.STL" />
       </geometry>
       <material
         name="">
@@ -250,96 +420,38 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/rear_left_caster_wheel.STL" />
+          filename="package://toy_car/meshes/rear_left.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="rear_left_caster_wheel_joint"
-    type="continuous">
+    name="rear_left_joint"
+    type="fixed">
     <origin
-      xyz="0.008 -0.032 0"
-      rpy="0 0 -0.21884" />
-    <parent
-      link="rear_left_caster" />
-    <child
-      link="rear_left_caster_wheel" />
-    <axis
-      xyz="0 0 1" />
-  </joint>
-  <link
-    name="rear_right_caster">
-    <inertial>
-      <origin
-        xyz="0.0031981 -0.014913 6.9389E-18"
-        rpy="0 0 0" />
-      <mass
-        value="0.0175" />
-      <inertia
-        ixx="3.687E-06"
-        ixy="2.9995E-07"
-        ixz="2.8933E-22"
-        iyy="2.8932E-06"
-        iyz="9.8272E-22"
-        izz="1.983E-06" />
-    </inertial>
-    <visual>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://toy_car/meshes/rear_right_caster.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.89804 0.91765 0.92941 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
-      <geometry>
-        <mesh
-          filename="package://toy_car/meshes/rear_right_caster.STL" />
-      </geometry>
-    </collision>
-  </link>
-  <joint
-    name="rear_right_caster_joint"
-    type="continuous">
-    <origin
-      xyz="0.22 -0.04 -0.0235"
-      rpy="1.5708 0 0" />
+      xyz="-0.288495633593833 0.1025 0.0564000000000001"
+      rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
-      link="rear_right_caster" />
+      link="rear_left" />
     <axis
-      xyz="0 1 0" />
-    <limit
-      lower="0"
-      upper="0"
-      effort="0"
-      velocity="0" />
+      xyz="0 0 0" />
   </joint>
   <link
-    name="rear_right_caster_wheel">
+    name="rear_left_suspension">
     <inertial>
       <origin
-        xyz="0 0 -6.9389E-18"
+        xyz="0 5.55111512312578E-17 -0.0393577295170233"
         rpy="0 0 0" />
       <mass
-        value="0.025328" />
+        value="0.0815242305195134" />
       <inertia
-        ixx="3.8234E-06"
-        ixy="5.294E-23"
-        ixz="-8.7788E-23"
-        iyy="3.8234E-06"
-        iyz="-5.3208E-25"
-        izz="6.5662E-06" />
+        ixx="5.03457524758413E-05"
+        ixy="-2.73343613870472E-22"
+        ixz="-2.69939333546856E-21"
+        iyy="5.01112983622256E-05"
+        iyz="2.51620724300096E-21"
+        izz="4.8856497869962E-05" />
     </inertial>
     <visual>
       <origin
@@ -347,7 +459,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/rear_right_caster_wheel.STL" />
+          filename="package://toy_car/meshes/rear_left_suspension.STL" />
       </geometry>
       <material
         name="">
@@ -361,38 +473,46 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/rear_right_caster_wheel.STL" />
+          filename="package://toy_car/meshes/rear_left_suspension.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="rear_right_caster_wheel_joint"
-    type="continuous">
+    name="rear_left_suspension_joint"
+    type="prismatic">
     <origin
-      xyz="0.008 -0.032 0"
-      rpy="3.1416 0 0.10137" />
+      xyz="0 0 -0.06"
+      rpy="0 0 0" />
     <parent
-      link="rear_right_caster" />
+      link="rear_left" />
     <child
-      link="rear_right_caster_wheel" />
+      link="rear_left_suspension" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.02"
+      upper="0.02"
+      effort="1000"
+      velocity="1000" />
+    <dynamics
+      damping="0"
+      friction="0" />
   </joint>
   <link
-    name="camera_left">
+    name="rear_right">
     <inertial>
       <origin
-        xyz="-0.011554 -2.6437E-06 -0.01271"
+        xyz="0 -5.20417042793042E-18 -0.0153728572796044"
         rpy="0 0 0" />
       <mass
-        value="0.043612" />
+        value="0.00600385822447067" />
       <inertia
-        ixx="2.3571E-05"
-        ixy="-1.0181E-09"
-        ixz="2.1758E-08"
-        iyy="4.2948E-06"
-        iyz="-8.8579E-10"
-        izz="2.2106E-05" />
+        ixx="1.4400951361228E-06"
+        ixy="1.56504335592465E-22"
+        ixz="-4.39618613232038E-23"
+        iyy="5.05998771239394E-07"
+        iyz="-7.69360318009659E-23"
+        izz="1.54583669239748E-06" />
     </inertial>
     <visual>
       <origin
@@ -400,12 +520,12 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/camera_left.STL" />
+          filename="package://toy_car/meshes/rear_right.STL" />
       </geometry>
       <material
         name="">
         <color
-          rgba="0.79216 0.81961 0.93333 1" />
+          rgba="1 1 1 1" />
       </material>
     </visual>
     <collision>
@@ -414,38 +534,38 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/camera_left.STL" />
+          filename="package://toy_car/meshes/rear_right.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="camera_left_joint"
+    name="rear_right"
     type="fixed">
     <origin
-      xyz="-0.0375 -0.275 0.134"
-      rpy="0 0 -3.1416" />
+      xyz="-0.288495633593834 -0.1025 0.0564000000000001"
+      rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
-      link="camera_left" />
+      link="rear_right" />
     <axis
       xyz="0 0 0" />
   </joint>
   <link
-    name="camera_center">
+    name="rear_right_suspension">
     <inertial>
       <origin
-        xyz="-0.011554 -2.6444E-06 -0.01371"
+        xyz="0 -1.04083408558608E-17 -0.0393577295170232"
         rpy="0 0 0" />
       <mass
-        value="0.043612" />
+        value="0.0815242305195134" />
       <inertia
-        ixx="2.3571E-05"
-        ixy="-1.0184E-09"
-        ixz="2.1759E-08"
-        iyy="4.2948E-06"
-        iyz="-8.8503E-10"
-        izz="2.2106E-05" />
+        ixx="5.03457524758413E-05"
+        ixy="-7.45258625197246E-23"
+        ixz="9.46617793312654E-23"
+        iyy="5.01112983622256E-05"
+        iyz="-1.4837703661536E-22"
+        izz="4.8856497869962E-05" />
     </inertial>
     <visual>
       <origin
@@ -453,12 +573,12 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/camera_center.STL" />
+          filename="package://toy_car/meshes/rear_right_suspension.STL" />
       </geometry>
       <material
         name="">
         <color
-          rgba="0.79216 0.81961 0.93333 1" />
+          rgba="1 1 1 1" />
       </material>
     </visual>
     <collision>
@@ -467,38 +587,43 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/camera_center.STL" />
+          filename="package://toy_car/meshes/rear_right_suspension.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="camera_center_joint"
-    type="fixed">
+    name="rear_right_suspension_joint"
+    type="prismatic">
     <origin
-      xyz="-0.072595 -0.15 0.128"
-      rpy="0 0.2012 -3.1416" />
+      xyz="0 0 -0.06"
+      rpy="0 0 0" />
     <parent
-      link="base_link" />
+      link="rear_right" />
     <child
-      link="camera_center" />
+      link="rear_right_suspension" />
     <axis
-      xyz="0 0 0" />
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.02"
+      upper="0.02"
+      effort="1000"
+      velocity="1000" />
   </joint>
   <link
-    name="camera_right">
+    name="cam_left">
     <inertial>
       <origin
-        xyz="-0.0115544749097688 -2.64371644592698E-06 -0.0127097051774589"
+        xyz="-0.0120544749097688 -2.64371644598249E-06 0.00129029482254094"
         rpy="0 0 0" />
       <mass
-        value="0.0436119950287126" />
+        value="0.0436119950287128" />
       <inertia
         ixx="2.357070580464E-05"
-        ixy="-1.01813691696859E-09"
-        ixz="2.17579681215314E-08"
-        iyy="4.2947913359114E-06"
-        iyz="-8.85791113953283E-10"
-        izz="2.21058141232447E-05" />
+        ixy="-1.01813691700999E-09"
+        ixz="2.17579681215313E-08"
+        iyy="4.29479133591159E-06"
+        iyz="-8.85791113982287E-10"
+        izz="2.21058141232449E-05" />
     </inertial>
     <visual>
       <origin
@@ -506,7 +631,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/camera_right.STL" />
+          filename="package://toy_car/meshes/cam_left.STL" />
       </geometry>
       <material
         name="">
@@ -520,38 +645,38 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/camera_right.STL" />
+          filename="package://toy_car/meshes/cam_left.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="camera_right_joint"
+    name="cam_left_joint"
     type="fixed">
     <origin
-      xyz="-0.0375 -0.025 0.134"
-      rpy="0 0 3.1416" />
+      xyz="0.0245 0.125 0.11"
+      rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
-      link="camera_right" />
+      link="cam_left" />
     <axis
       xyz="0 0 0" />
   </joint>
   <link
-    name="lidar_top">
+    name="cam_center">
     <inertial>
       <origin
-        xyz="0.01205 -0.00052766 -0.028765"
+        xyz="-0.0120544747058804 -2.64441767712509E-06 0.00129029282470135"
         rpy="0 0 0" />
       <mass
-        value="0.073085" />
+        value="0.0436119958195422" />
       <inertia
-        ixx="1.9581E-05"
-        ixy="-1.0393E-07"
-        ixz="-4.2839E-07"
-        iyy="2.4125E-05"
-        iyz="9.4271E-09"
-        izz="4.1418E-05" />
+        ixx="2.3570706297655E-05"
+        ixy="-1.01838561350546E-09"
+        ixz="2.17586651355488E-08"
+        iyy="4.29479058709873E-06"
+        iyz="-8.85031082188919E-10"
+        izz="2.21058153779503E-05" />
     </inertial>
     <visual>
       <origin
@@ -559,7 +684,219 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/lidar_top.STL" />
+          filename="package://toy_car/meshes/cam_center.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/cam_center.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="cam_center_joint"
+    type="fixed">
+    <origin
+      xyz="0.065337 0 0.1132"
+      rpy="0 0.2012 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="cam_center" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="cam_right">
+    <inertial>
+      <origin
+        xyz="-0.0120544749097688 -2.64371644610219E-06 0.00129029482254099"
+        rpy="0 0 0" />
+      <mass
+        value="0.0436119950287128" />
+      <inertia
+        ixx="2.357070580464E-05"
+        ixy="-1.0181369170115E-09"
+        ixz="2.17579681215311E-08"
+        iyy="4.29479133591163E-06"
+        iyz="-8.85791114096477E-10"
+        izz="2.21058141232449E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/cam_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/cam_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="cam_right_joint"
+    type="fixed">
+    <origin
+      xyz="0.0245 -0.125 0.10999737041193"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="cam_right" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="lidar">
+    <inertial>
+      <origin
+        xyz="-0.0120499098018976 0.000527659667923397 -0.0287648857892997"
+        rpy="0 0 0" />
+      <mass
+        value="0.0730845703017379" />
+      <inertia
+        ixx="1.95808756632736E-05"
+        ixy="-1.03933589330764E-07"
+        ixz="4.28391188454363E-07"
+        iyy="2.41250078188066E-05"
+        iyz="-9.42709177675029E-09"
+        izz="4.14184514527587E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/lidar.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/lidar.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="lidar_joint"
+    type="fixed">
+    <origin
+      xyz="-0.085232 0 0.177"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="lidar" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="imu">
+    <inertial>
+      <origin
+        xyz="8.67361737988404E-19 -2.77555756156289E-17 -0.00499999999999999"
+        rpy="0 0 0" />
+      <mass
+        value="0.000999999999999999" />
+      <inertia
+        ixx="1.66666666666666E-08"
+        ixy="2.24876659584175E-24"
+        ixz="5.51453741702021E-25"
+        iyy="1.66666666666666E-08"
+        iyz="-3.53318618123475E-25"
+        izz="1.66666666666666E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/imu.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/imu.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="imu_joint"
+    type="fixed">
+    <origin
+      xyz="-0.00499999999999977 0 0.13499737041193"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="imu" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="dummy">
+    <inertial>
+      <origin
+        xyz="8.6736E-19 -2.7756E-17 -0.005"
+        rpy="0 0 0" />
+      <mass
+        value="0.001" />
+      <inertia
+        ixx="1.6667E-08"
+        ixy="2.2488E-24"
+        ixz="5.5145E-25"
+        iyy="1.6667E-08"
+        iyz="-3.5332E-25"
+        izz="1.6667E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://toy_car/meshes/dummy.STL" />
       </geometry>
       <material
         name="">
@@ -573,20 +910,20 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://toy_car/meshes/lidar_top.STL" />
+          filename="package://toy_car/meshes/dummy.STL" />
       </geometry>
     </collision>
   </link>
   <joint
-    name="lidar_top_joint"
+    name="dummy_joint"
     type="fixed">
     <origin
-      xyz="0.081303 -0.15 0.1865"
+      xyz="-0.005 0 0.135"
       rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
-      link="lidar_top" />
+      link="dummy" />
     <axis
       xyz="0 0 0" />
   </joint>
@@ -614,9 +951,74 @@
     </actuator>
   </transmission>
 
+  <transmission name="tran_front_left_sus">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_left_suspension_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_sus1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran_front_right_sus">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_right_suspension_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_sus2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran_rear_left_sus">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="rear_left_suspension_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_sus3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="tran_rear_right_sus">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="rear_right_suspension_joint">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor_sus4">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <gazebo reference="rear_right_suspension">
+    <mu1>0.0001</mu1>
+    <mu2>0.0001</mu2>
+  </gazebo>
+
+  <gazebo reference="rear_left_suspension">
+    <mu1>0.0001</mu1>
+    <mu2>0.0001</mu2>
+  </gazebo>
+
+
+  <gazebo reference="front_left_wheel">
+    <mu1>1</mu1>
+    <mu2>1</mu2>
+  </gazebo>
+
+  <gazebo reference="front_left_wheel">
+    <mu1>1</mu1>
+    <mu2>1</mu2>
+  </gazebo>
+
   <gazebo>
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-      <robotNamespace>/toy_car</robotNamespace>
+      <robotNamespace>/toy_car2</robotNamespace>
     </plugin>
   </gazebo>
 
@@ -784,6 +1186,8 @@
       </plugin>
     </sensor>
   </gazebo>
+
+
 
 
 </robot>

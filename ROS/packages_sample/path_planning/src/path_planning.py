@@ -3,6 +3,7 @@ from __future__ import division
 import rospy
 #from std_msgs.msg import String
 from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -148,6 +149,7 @@ def update_robot_pos(data):
 
 #dummy
 motor_cmd = Float64MultiArray()
+suspension_cmd = Float64()
 car = [0, 0, 0]
 
 #fixed parameters
@@ -155,8 +157,14 @@ obstacle_list = [[4,1.5], [5.5,0.7], [5.5,2.3], [7,1.5]]
 
 #parameters to adjust
 spd = 7
-motor_cmd_topic_name = '/toy_car/joint_vel_controller/command'
-[p_gain, i_gain, d_gain] = [6, 0.03, 0]
+[p_gain, i_gain, d_gain] = [7, 0, 0]
+motor_cmd_topic_name = '/toy_car2/joint_vel_controller/command'
+suspension_topic_front_left = '/toy_car2/front_left_suspension_controller/command'
+suspension_topic_front_right = '/toy_car2/front_right_suspension_controller/command'
+suspension_topic_rear_left = '/toy_car2/rear_left_suspension_controller/command'
+suspension_topic_rear_right = '/toy_car2/rear_right_suspension_controller/command'
+
+
 x_end = float(input("Enter x_coordinate of destination coordinate within (3~8): "))
 y_end = float(input("Enter y_coordinate of destination coordinate within (0~3): "))
 end = [x_end, y_end]
@@ -167,21 +175,35 @@ end = [x_end, y_end]
 
 #publisher & subscriber
 pub = rospy.Publisher(motor_cmd_topic_name, Float64MultiArray, queue_size=10)
+pub1 = rospy.Publisher(suspension_topic_front_left, Float64, queue_size=10)
+pub2 = rospy.Publisher(suspension_topic_front_right, Float64, queue_size=10)
+pub3 = rospy.Publisher(suspension_topic_rear_left, Float64, queue_size=10)
+pub4 = rospy.Publisher(suspension_topic_rear_right, Float64, queue_size=10)
 rospy.Subscriber("/gazebo/model_states", ModelStates, update_robot_pos)
 
+#node initiation
 rospy.init_node("path_planning")
-rate = rospy.Rate(10)
+
+
+#suspension initiation
+suspension_cmd.data = 0.03
+pub1.publish(suspension_cmd)
+pub2.publish(suspension_cmd)
+pub3.publish(suspension_cmd)
+pub4.publish(suspension_cmd)
+
+#rate control
+rate = rospy.Rate(20)
 
 e_old = 0
 e_i = 0
-plt.ion()
 k = 0
-start = [car[0] - 0.1*sin(car[2]), car[1] + 0.1*cos(car[2])]
+start = [car[0], car[1]]
 while not rospy.is_shutdown():
-  while find_length(start, end) > 0.01:
+  while find_length(start, end) > 0.02:
     #calculate path_list
     #adjust start point
-    start = [car[0] - 0.1*sin(car[2]), car[1] + 0.1*cos(car[2])]
+    start = [car[0], car[1]]
     path_list = [start, end]
 
     dist_list = []
@@ -203,28 +225,33 @@ while not rospy.is_shutdown():
     path_angle = acos(path_v[0]/sqrt(path_v[0]**2 + path_v[1]**2))
     if path_v[1] < 0:
       path_angle = 2*pi - path_angle
-    e = car[2] - path_angle
+    e = path_angle - car[2] - pi
     #print('error: ', e)
     if e > pi:
       e = e - 2*pi
     if e < -pi:
       e = e + 2*pi
+    print('error: ', e)
     e_i = e_i + e
     e_d = e - e_old
     result = (e*p_gain + e_i*i_gain + e_d*d_gain)
     #print('result: ', result)
-    motor_cmd.data = [(spd + result), (spd - result)]
+    motor_cmd.data = [(spd - result), (spd + result)]
 
-    if k % 20 == 0:
-      print('motor_cmd: ', motor_cmd.data)
-      print('car: ', car)
-      print('..')
+
+    print('motor_cmd: ', motor_cmd.data)
+    print('car: ', car)
+    print('..')
 
     pub.publish(motor_cmd)
     e = e_old
     rate.sleep()
   motor_cmd.data = [0,0]
   pub.publish(motor_cmd)
+  pub1.publish(suspension_cmd)
+  pub2.publish(suspension_cmd)
+  pub3.publish(suspension_cmd)
+  pub4.publish(suspension_cmd)
   print("Desired destination: ", end, "    car_pos: ", car)
   print("..")
   x_end = float(input("Enter x_coordinate of destination coordinate within (3~8): "))
@@ -237,31 +264,6 @@ while not rospy.is_shutdown():
   k = k + 1
   rate.sleep()
 
-'''
-  #draw current path_planning
-  plt.clf()
-  x = []
-  y = []
-  for path in path_list:
-    x.append(path[0])
-    y.append(path[1])
-  plt.plot(x,y, 'o-')
-
-  #draw obstacle
-  for obstacle in obstacle_list:
-    yy1 = []
-    yy2 = []
-    X = obstacle[0]
-    Y = obstacle[1]
-    xx = linspace(X-(r-0.0001), X+(r-0.0001), 100)
-    for x in xx:
-      yy1.append(sqrt(r**2 - (x-X)**2)+Y)
-      yy2.append(-sqrt(r**2 - (x-X)**2)+Y)
-    plt.plot(xx,yy1)
-    plt.plot(xx,yy2)
-  plt.axis('equal')
-  plt.draw()
-'''
 
 		
 
