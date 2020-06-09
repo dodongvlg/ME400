@@ -610,7 +610,7 @@
       velocity="1000" />
   </joint>
   <link
-    name="cam_left">
+    name="camera_left">
     <inertial>
       <origin
         xyz="-0.0120544749097688 -2.64371644598249E-06 0.00129029482254094"
@@ -650,7 +650,7 @@
     </collision>
   </link>
   <joint
-    name="cam_left_joint"
+    name="camera_left_joint"
     type="fixed">
     <origin
       xyz="0.0245 0.125 0.11"
@@ -658,12 +658,12 @@
     <parent
       link="base_link" />
     <child
-      link="cam_left" />
+      link="camera_left" />
     <axis
       xyz="0 0 0" />
   </joint>
   <link
-    name="cam_center">
+    name="camera_center">
     <inertial>
       <origin
         xyz="-0.0120544747058804 -2.64441767712509E-06 0.00129029282470135"
@@ -703,7 +703,7 @@
     </collision>
   </link>
   <joint
-    name="cam_center_joint"
+    name="camera_center_joint"
     type="fixed">
     <origin
       xyz="0.065337 0 0.1132"
@@ -711,12 +711,12 @@
     <parent
       link="base_link" />
     <child
-      link="cam_center" />
+      link="camera_center" />
     <axis
       xyz="0 0 0" />
   </joint>
   <link
-    name="cam_right">
+    name="camera_right">
     <inertial>
       <origin
         xyz="-0.0120544749097688 -2.64371644610219E-06 0.00129029482254099"
@@ -756,7 +756,7 @@
     </collision>
   </link>
   <joint
-    name="cam_right_joint"
+    name="camera_right_joint"
     type="fixed">
     <origin
       xyz="0.0245 -0.125 0.10999737041193"
@@ -764,12 +764,12 @@
     <parent
       link="base_link" />
     <child
-      link="cam_right" />
+      link="camera_right" />
     <axis
       xyz="0 0 0" />
   </joint>
   <link
-    name="lidar">
+    name="lidar_top">
     <inertial>
       <origin
         xyz="-0.0120499098018976 0.000527659667923397 -0.0287648857892997"
@@ -817,7 +817,7 @@
     <parent
       link="base_link" />
     <child
-      link="lidar" />
+      link="lidar_top" />
     <axis
       xyz="0 0 0" />
   </joint>
