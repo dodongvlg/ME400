@@ -202,7 +202,10 @@ int main(int argc, char **argv)
 	ros::Publisher pub_right_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/right_wheel_velocity_controller/command", 10);
 
 	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata", 16);
+	ros::Publisher pub_ent = n.advertise<std_msgs::Float64>("/map/enter_direction", 16);
+
 	std_msgs::Float64MultiArray map_msg; // map_data : [theta, x, y]
+	std_msgs::Float64 ent_msg; // entrance direction
 
 	ent_thresh = 50;
         theta_prev = 0;
@@ -223,8 +226,13 @@ int main(int argc, char **argv)
 				ent_cnt++;
 			}
 		}
+
+		/* 
+		!!!! Mode transition is off for entrance navigation experiment
 		if (ent_cnt > ent_thresh) mode = STAGE; // Mode transition
 		std::cout << "Current sight : " << ent_cnt << " mode : " << mode << std::endl;
+		!!!! Mode transition is off for entrance navigation experiment
+		*/
 
 		// Loop 1 : Branched navigation
 		if (mode) {
@@ -363,6 +371,8 @@ int main(int argc, char **argv)
 			}
 			if (ent_cnts > 0) ent_avgs /= ent_cnts;
 			std::cout << "Entrance navigation should preceed on " << ent_avgs << std::endl;
+			ent_msg.data = ent_avgs;
+			pub_ent.publish(ent_msg);
 
 		}
 
