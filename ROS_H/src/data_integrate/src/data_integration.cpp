@@ -1,8 +1,8 @@
 /*
 Data Integration Node
 KAIST ME400 Team H
-Last modified by Gunwoo Park, 2020. 06. 02.
-Version 3 : Implemented Mode and Entrance Data Processing
+Last modified by Gunwoo Park, 2020. 06. 09.
+Version 4 : Implemented Global Path Planning W/O OpenCV
 This code is composed with init, loop, and two callback parts.
 Init : Executes once if the node starts to run.
 Loop : Executes periodically during the node runtime.
@@ -34,6 +34,7 @@ Callback : Executes every time the subscriber recieves the message.
 #include <ros/package.h>
 #include <core_msgs/ball_position.h>
 #include <sensor_msgs/LaserScan.h>
+#include <gazebo_msgs/ModelStates.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
@@ -60,6 +61,10 @@ int ball_number;
 float ball_X[20];
 float ball_Y[20];
 float ball_distance[20];
+
+// Global Variables directly from Gazebo
+float x_ball[6];
+float y_ball[6];
 
 // Matrix rotation
 // Input : 2x2 matrix to rotate
@@ -135,6 +140,13 @@ float avg_x(Eigen::Matrix<float, 2, n_ldr> ldrxy, float x_ref, float thr) {
 	return sum / count;
 }
 
+// L2 distance calculation
+// Input : two points
+// Output : angular distance
+float calc_dist(int x1, int x2, int y1, int y2) {
+	return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+}
+
 // Angular distance calculation
 // Input : two angles
 // Output : angular distance
@@ -172,6 +184,18 @@ void camera_Callback(const core_msgs::ball_position::ConstPtr& position) {
 	map_mutex.unlock();
 }
 
+// Callback 3 : Get ball position from Gazebo (To be replaced to OpenCV)
+void model_Callback(const gazebo_msgs::ModelStates::ConstPtr& model) {
+	map_mutex.lock();
+	int i_ball;
+	int n_ball = 6;
+	for (i_ball = 0; i_ball < n_ball; i_ball++) {
+		x_ball[i_ball] = model->pose[i_ball + 6].position.x - 3;
+		y_ball[i_ball] = model->pose[i_ball + 6].position.y;
+	}
+	map_mutex.unlock();
+}
+
 
 // MAIN FUNCTION
 int main(int argc, char **argv)
@@ -188,8 +212,18 @@ int main(int argc, char **argv)
 	float area, area_min, x_abs, y_abs, x_ref, x_max, x_prev, y_prev, x_ldr, x_sum; // Map parameters
 	float map_dim[5];
 	float *map_ptr;
-	std::vector<double> map_data(3);
+	std::vector<double> map_data(7);
 	std::vector<double> obj_data(20);
+
+	// Local Variables for loop 3
+	int i_ball, near_ball;
+	int m_ball = 3;
+	int n_ball = 6;
+	float dist, near_dist;
+	float x_obj0, y_obj0, x_obj1, y_obj1;
+	float x_hole = 5;
+	float y_hole = 1.5;
+	float margin = 0.2;
 
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
@@ -198,13 +232,15 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 
+	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
+
 	ros::Publisher pub_left_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/left_wheel_velocity_controller/command", 10);
 	ros::Publisher pub_right_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/right_wheel_velocity_controller/command", 10);
 
-	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata", 16);
-	ros::Publisher pub_ent = n.advertise<std_msgs::Float64>("/map/enter_direction", 16);
+	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata/stage_position", 16);
+	ros::Publisher pub_ent = n.advertise<std_msgs::Float64>("/mapdata/enter_direction", 16);
 
-	std_msgs::Float64MultiArray map_msg; // map_data : [theta, x, y]
+	std_msgs::Float64MultiArray map_msg; // vehicle state : [theta, x, y]
 	std_msgs::Float64 ent_msg; // entrance direction
 
 	ent_thresh = 50;
@@ -227,12 +263,9 @@ int main(int argc, char **argv)
 			}
 		}
 
-		/* 
-		!!!! Mode transition is off for entrance navigation experiment
 		if (ent_cnt > ent_thresh) mode = STAGE; // Mode transition
-		std::cout << "Current sight : " << ent_cnt << " mode : " << mode << std::endl;
-		!!!! Mode transition is off for entrance navigation experiment
-		*/
+		std::cout << std::endl;
+		std::cout << "Current mode : " << mode << " open " << ent_cnt << std::endl;
 
 		// Loop 1 : Branched navigation
 		if (mode) {
@@ -325,10 +358,6 @@ int main(int argc, char **argv)
 			map_data.at(0) = theta;
 			map_data.at(1) = x_abs;
 			map_data.at(2) = y_abs;
-
-			map_msg.data = map_data;
-			pub_map.publish(map_msg);
-			std::cout << "t : " << map_data.at(0) << "\tx : " << map_data.at(1) << "\ty : " << map_data.at(2) << std::endl;
 			
 			theta_prev = theta;
 			x_prev = x_abs;
@@ -339,7 +368,35 @@ int main(int argc, char **argv)
 			
 
 
-			// Loop A - 3 : Find optimal global & local path, to be implemented
+			// Loop A - 3 : Find optimal global & local path
+			near_ball = 0;
+			near_dist = 5;
+			for (i_ball = m_ball; i_ball < n_ball; i_ball++) {
+				dist = calc_dist(x_abs, x_ball[i_ball], y_abs, y_ball[i_ball]);
+				if (dist < near_dist) {
+					near_dist = dist;
+					near_ball = i_ball;
+				}
+			}
+			x_obj1 = x_ball[near_ball];
+			y_obj1 = y_ball[near_ball];
+			x_obj0 = x_ball[near_ball] - margin * (x_hole - x_obj1) / calc_dist(x_hole, x_obj1, y_hole, y_obj1);
+			y_obj0 = y_ball[near_ball] - margin * (y_hole - y_obj1) / calc_dist(x_hole, x_obj1, y_hole, y_obj1);
+			
+			std::cout << "Path 1 : " << x_abs << ", " << y_abs << " -> " << x_obj0 << ", " << y_obj0 << std::endl;
+			std::cout << "Path 2 : " << x_obj0 << ", " << y_obj0 << " -> " << x_obj1 << ", " << y_obj1 << std::endl;
+			std::cout << "Path 3 : " << x_obj0 << ", " << y_obj1 << " -> " << x_hole << ", " << y_hole << std::endl;
+			std::cout << std::endl;
+
+			map_data.at(3) = x_obj0; // x coordinate of docking position
+			map_data.at(4) = y_obj0; // y coordinate of docking position
+			map_data.at(5) = x_obj1; // x coordinate of ball position
+			map_data.at(6) = y_obj1; // y coordinate of ball position
+
+			map_msg.data = map_data;
+			pub_map.publish(map_msg);
+			std::cout << "Position : " << map_data.at(1) << ", " << map_data.at(2) << "  Orientation : " << map_data.at(0) << std::endl;
+
 		}
 		else {
 			// Loop B : ENTER MODE (entrance)
