@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 	Eigen::Matrix<float, 2, 2> rotmat;
 
 	// Local Variables for loop 1
-	int i_ldr, cur_cnt, max_cnt;
+	int i_ldr, pi_ldr, cur_cnt, max_cnt;
 	int ent_cnt, ent_avg, ent_cnts, ent_avgs, ent_thresh; // For entrance navigation
 	int theta, theta_step, theta_dir, theta_prev, theta_offset; // For theta optimization
 	int mode = ENTER; // ENTER == 0, STAGE == 1
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
         theta_prev = 0;
 	x_prev = -0.25;
 	y_prev = 0.5;
-	theta_offset = 180;
+	theta_offset = 0;
 
 	// Loop : Process data and Publish message every 200ms
 	while(ros::ok){
@@ -256,9 +256,11 @@ int main(int argc, char **argv)
 
 		// Check whether the vehicle entered the stage
 		ent_cnt = 0;
-		for (i_ldr = 90; i_ldr < n_ldr - 90; i_ldr++) {
+		for (i_ldr = -90; i_ldr <= 90; i_ldr++) {
+			pi_ldr = i_ldr;
+			if (i_ldr < 0) pi_ldr = i_ldr + 360;
 			// Consider 180 deg front
-			if (lidar_distance[i_ldr] > 3) {
+			if (lidar_distance[pi_ldr] > 3) {
 				ent_cnt++;
 			}
 		}
