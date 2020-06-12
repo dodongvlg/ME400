@@ -1,8 +1,8 @@
 /*
 Data Integration Node
 KAIST ME400 Team H
-Last modified by Gunwoo Park, 2020. 06. 09.
-Version 4 : Implemented Global Path Planning W/O OpenCV
+Last modified by Gunwoo Park, 2020. 06. 12.
+Version 5 : Setting docking position considering obstacles
 This code is composed with init, loop, and two callback parts.
 Init : Executes once if the node starts to run.
 Loop : Executes periodically during the node runtime.
@@ -143,7 +143,7 @@ float avg_x(Eigen::Matrix<float, 2, n_ldr> ldrxy, float x_ref, float thr) {
 // L2 distance calculation
 // Input : two points
 // Output : angular distance
-float calc_dist(int x1, int x2, int y1, int y2) {
+float calc_dist(float x1, float x2, float y1, float y2) {
 	return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 }
 
@@ -190,7 +190,7 @@ void model_Callback(const gazebo_msgs::ModelStates::ConstPtr& model) {
 	int i_ball;
 	int n_ball = 6;
 	for (i_ball = 0; i_ball < n_ball; i_ball++) {
-		x_ball[i_ball] = model->pose[i_ball + 6].position.x - 3;
+		x_ball[i_ball] = model->pose[i_ball + 6].position.x;
 		y_ball[i_ball] = model->pose[i_ball + 6].position.y;
 	}
 	map_mutex.unlock();
@@ -214,16 +214,23 @@ int main(int argc, char **argv)
 	float *map_ptr;
 	std::vector<double> map_data(7);
 	std::vector<double> obj_data(20);
+	float ldr_offset = 0.2;
 
 	// Local Variables for loop 3
-	int i_ball, near_ball;
+	int i_ball, i_obs, near_ball, danger;
+	float agl_dock, agl_hole, agl_obs, dist, near_dist;
+	float x_obj0, y_obj0, x_obj1, y_obj1;
+
+	// Local Constants for loop 3
 	int m_ball = 3;
 	int n_ball = 6;
-	float dist, near_dist;
-	float x_obj0, y_obj0, x_obj1, y_obj1;
-	float x_hole = 5;
+	int n_obs = 6;
+	float x_hole = 8;
 	float y_hole = 1.5;
-	float margin = 0.2;
+	float dst_dock = 0.2;
+	float x_obs[4] = {4, 5.5, 5.5, 7};
+	float y_obs[4] = {1.5, 0.7, 2.3, 1.5};
+	float dst_obs = 0.3;
 
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
@@ -245,7 +252,7 @@ int main(int argc, char **argv)
 
 	ent_thresh = 50;
         theta_prev = 0;
-	x_prev = -0.25;
+	x_prev = 2.75;
 	y_prev = 0.5;
 	theta_offset = 0;
 
@@ -346,9 +353,15 @@ int main(int argc, char **argv)
 			if (x_max > 0) {
 				x_abs += 5;
 			}
-			if (abs(x_abs - x_prev) > abs(x_abs - 1 - x_prev)) x_abs -= 1;
 
-			y_abs = map_ptr[4];
+			y_abs = map_ptr[4] * 3 / map_ptr[2];
+
+			x_abs = x_abs + ldr_offset * cos(RAD(theta));
+			y_abs = y_abs - ldr_offset * sin(RAD(theta));
+
+			x_abs += 3; // Fit to global coordinate
+
+			if (abs(x_abs - x_prev) > abs(x_abs - 1 - x_prev)) x_abs -= 1;
 			
 			if (abs(x_abs - x_prev) > 0.5 || abs(y_abs - y_prev) > 0.5 || (x_abs == 0 && y_abs == 0)) {
 				std::cout << "Error : x at " << x_abs << " y at " << y_abs << std::endl;
@@ -364,6 +377,7 @@ int main(int argc, char **argv)
 			theta_prev = theta;
 			x_prev = x_abs;
 			y_prev = y_abs;
+			std::cout << "Position : " << map_data.at(1) << ", " << map_data.at(2) << "  Orientation : " << map_data.at(0) << std::endl;
 
 			// Loop A - 2 : Position objects on the map, to be implemented
 			
@@ -382,13 +396,28 @@ int main(int argc, char **argv)
 			}
 			x_obj1 = x_ball[near_ball];
 			y_obj1 = y_ball[near_ball];
-			x_obj0 = x_ball[near_ball] - margin * (x_hole - x_obj1) / calc_dist(x_hole, x_obj1, y_hole, y_obj1);
-			y_obj0 = y_ball[near_ball] - margin * (y_hole - y_obj1) / calc_dist(x_hole, x_obj1, y_hole, y_obj1);
+			
+
+			agl_dock = atan((y_hole - y_obj1) / (x_hole - x_obj1));
+			
+			danger = 1;
+			while (danger) {
+				x_obj0 = x_ball[near_ball] - dst_dock * cos(agl_dock);
+				y_obj0 = y_ball[near_ball] - dst_dock * sin(agl_dock);
+				danger = 0;
+				for (i_obs = 0; i_obs < n_obs; i_obs++) {
+					if (calc_dist(x_obj0, x_obs[i_obs], y_obj0, y_obs[i_obs]) < dst_obs) {
+						danger = 1;
+						agl_obs = atan((x_hole - x_obs[i_obs]) / (y_hole - y_obs[i_obs]));
+						agl_dock = agl_dock + RAD(2 * (agl_dock - agl_obs) / abs(agl_dock - agl_obs));
+					}
+				}
+				
+			}
 			
 			std::cout << "Path 1 : " << x_abs << ", " << y_abs << " -> " << x_obj0 << ", " << y_obj0 << std::endl;
 			std::cout << "Path 2 : " << x_obj0 << ", " << y_obj0 << " -> " << x_obj1 << ", " << y_obj1 << std::endl;
-			std::cout << "Path 3 : " << x_obj0 << ", " << y_obj1 << " -> " << x_hole << ", " << y_hole << std::endl;
-			std::cout << std::endl;
+			std::cout << "Path 3 : " << x_obj0 << ", " << y_obj1 << " -> " << x_hole - dst_dock << ", " << y_hole << std::endl;
 
 			map_data.at(3) = x_obj0; // x coordinate of docking position
 			map_data.at(4) = y_obj0; // y coordinate of docking position
@@ -397,7 +426,7 @@ int main(int argc, char **argv)
 
 			map_msg.data = map_data;
 			pub_map.publish(map_msg);
-			std::cout << "Position : " << map_data.at(1) << ", " << map_data.at(2) << "  Orientation : " << map_data.at(0) << std::endl;
+			std::cout << std::endl;
 
 		}
 		else {
