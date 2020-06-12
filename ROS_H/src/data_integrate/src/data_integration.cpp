@@ -240,9 +240,6 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 
-	ros::Publisher pub_left_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/left_wheel_velocity_controller/command", 10);
-	ros::Publisher pub_right_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/right_wheel_velocity_controller/command", 10);
-
 	ros::Publisher pub_mode = n.advertise<std_msgs::Float64>("/mapdata/mode", 16);
 	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata/stage_position", 16);
 	ros::Publisher pub_ent = n.advertise<std_msgs::Float64>("/mapdata/enter_direction", 16);
@@ -443,11 +440,17 @@ int main(int argc, char **argv)
 			ent_avg = 0;
 			ent_cnts = 0;
 			ent_avgs = 0;
-			for (i_ldr = 90; i_ldr < n_ldr - 90; i_ldr++) {
+
+			for (i_ldr = -90; i_ldr <= 90; i_ldr++) {
+				pi_ldr = i_ldr;
+				if (i_ldr < 0) pi_ldr = i_ldr + 360;
 				// Consider 180 deg front
-				if (lidar_distance[i_ldr] > 1) {
+				if (lidar_distance[pi_ldr] > 1) {
 					ent_cnt++;
-					ent_avg += DEG(lidar_angle[i_ldr] - RAD(theta_offset));
+					ent_avg += DEG(lidar_angle[pi_ldr]);
+					if (i_ldr < 0) ent_avg -= 360;
+					
+					// ent_avg += DEG(lidar_angle[pi_ldr] - RAD(theta_offset));
 				}
 				else {
 					if (ent_cnt > ent_cnts) {
@@ -458,12 +461,7 @@ int main(int argc, char **argv)
 					}
 				}
 			}
-			if (ent_cnt > ent_cnts) {
-				ent_cnts = ent_cnt;
-				ent_avgs = ent_avg;
-				ent_cnt = 0;
-				ent_avg = 0;
-			}
+
 			if (ent_cnts > 0) ent_avgs /= ent_cnts;
 			std::cout << "Entrance navigation should preceed on " << ent_avgs << std::endl;
 			ent_msg.data = ent_avgs;
