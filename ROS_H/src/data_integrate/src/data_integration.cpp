@@ -227,10 +227,10 @@ int main(int argc, char **argv)
 	int n_obs = 6;
 	float x_hole = 8;
 	float y_hole = 1.5;
-	float dst_dock = 0.2;
+	float dst_dock = 0.4;
 	float x_obs[4] = {4, 5.5, 5.5, 7};
 	float y_obs[4] = {1.5, 0.7, 2.3, 1.5};
-	float dst_obs = 0.3;
+	float dst_obs = 0.4;
 
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
@@ -238,23 +238,27 @@ int main(int argc, char **argv)
 	ros::Rate loop_rate(5);
 	ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
-
 	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 
 	ros::Publisher pub_left_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/left_wheel_velocity_controller/command", 10);
 	ros::Publisher pub_right_wheel= n.advertise<std_msgs::Float64>("/turtlebot3_waffle_sim/right_wheel_velocity_controller/command", 10);
 
+	ros::Publisher pub_mode = n.advertise<std_msgs::Float64>("/mapdata/mode", 16);
 	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata/stage_position", 16);
 	ros::Publisher pub_ent = n.advertise<std_msgs::Float64>("/mapdata/enter_direction", 16);
 
 	std_msgs::Float64MultiArray map_msg; // vehicle state : [theta, x, y]
-	std_msgs::Float64 ent_msg; // entrance direction
+	std_msgs::Float64 ent_msg; // entrance direction (message)
+	std_msgs::Float64 mode_msg; // mode (message)
 
 	ent_thresh = 50;
         theta_prev = 0;
 	x_prev = 2.75;
 	y_prev = 0.5;
 	theta_offset = 0;
+
+			map_msg.data = map_data;
+			pub_map.publish(map_msg);
 
 	// Loop : Process data and Publish message every 200ms
 	while(ros::ok){
@@ -275,6 +279,9 @@ int main(int argc, char **argv)
 		if (ent_cnt > ent_thresh) mode = STAGE; // Mode transition
 		std::cout << std::endl;
 		std::cout << "Current mode : " << mode << " open " << ent_cnt << std::endl;
+
+		mode_msg.data = mode;
+		pub_mode.publish(mode_msg);		
 
 		// Loop 1 : Branched navigation
 		if (mode) {
@@ -423,10 +430,10 @@ int main(int argc, char **argv)
 			map_data.at(4) = y_obj0; // y coordinate of docking position
 			map_data.at(5) = x_obj1; // x coordinate of ball position
 			map_data.at(6) = y_obj1; // y coordinate of ball position
+			std::cout << std::endl;
 
 			map_msg.data = map_data;
 			pub_map.publish(map_msg);
-			std::cout << std::endl;
 
 		}
 		else {
