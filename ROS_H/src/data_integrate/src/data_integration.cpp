@@ -189,9 +189,16 @@ void model_Callback(const gazebo_msgs::ModelStates::ConstPtr& model) {
 	map_mutex.lock();
 	int i_ball;
 	int n_ball = 6;
+	// Modified to ignore balls in the hole.
 	for (i_ball = 0; i_ball < n_ball; i_ball++) {
-		x_ball[i_ball] = model->pose[i_ball + 6].position.x;
-		y_ball[i_ball] = model->pose[i_ball + 6].position.y;
+		if (model->pose[i_ball + 6].position.z > 0.3) {
+			x_ball[i_ball] = model->pose[i_ball + 6].position.x;
+			y_ball[i_ball] = model->pose[i_ball + 6].position.y;
+		}
+		else {
+			x_ball[i_ball] = -8;
+			y_ball[i_ball] = -3;
+		}
 	}
 	map_mutex.unlock();
 }
@@ -235,7 +242,7 @@ int main(int argc, char **argv)
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
 	ros::NodeHandle n;
-	ros::Rate loop_rate(5);
+	ros::Rate loop_rate(5); // Modify this value to change loop rate for ~Hz.
 	ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
