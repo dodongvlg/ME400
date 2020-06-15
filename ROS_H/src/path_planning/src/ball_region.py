@@ -302,14 +302,16 @@ def align(target_ball_pos):
         motor_cmd.data = [-4, +4]
         pub.publish(motor_cmd)
       else:
-        motor_cmd.data = [-1, +1]
+        vel = abs(e)*2.5+0.1
+        motor_cmd.data = [-vel, +vel]
         pub.publish(motor_cmd)
     else:
       if abs(e) > 0.4:
         motor_cmd.data = [+4, -4]
         pub.publish(motor_cmd)
       else:
-        motor_cmd.data = [+1, -1]
+        vel = abs(e)*2.5+0.1
+        motor_cmd.data = [+vel, -vel]
         pub.publish(motor_cmd)
     print("aligning")
     print("error: ", e)
