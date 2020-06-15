@@ -120,7 +120,7 @@ if __name__ == '__main__':
                     if ((c2[0] - 30 < c1[0]) or (c1[0] < c2[0] + 30)):
                         if ((c2[1] - 5 < c1[1]) or (c1[1] < c2[1] + 5)):
                             x_dist = cam_distance * f_pixel / abs(c1[0] - c2[0]) * x_const
-                            y_dist = (x_dist * ((960 - c1[0]) + (960 - c2[0]))) / (2 * f_pixel) * y_const
+                            y_dist = (x_dist * ((960 - c1[0]) + (c2[0] - 960))) / (2 * f_pixel) * y_const
                             distance.append(x_dist)
                             distance.append(y_dist)
         
