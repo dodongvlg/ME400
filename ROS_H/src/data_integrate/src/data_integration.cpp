@@ -66,6 +66,11 @@ float ball_distance[20];
 float x_ball[6];
 float y_ball[6];
 
+// Global Variables for ball coordinates management.
+///// TO DO /////
+int ballpos_map[500][300];
+float ballpos_temp[10];
+
 // Matrix rotation
 // Input : 2x2 matrix to rotate
 // Output : 2x2 matrix rotated
@@ -203,6 +208,23 @@ void model_Callback(const gazebo_msgs::ModelStates::ConstPtr& model) {
 	map_mutex.unlock();
 }
 
+// Callback 4 : Callback for ball coordinate management
+///// TO DO ////
+void ballpos_Callback(const std_msgs::Float64MultiArray::ConstPtr& ballpos) {
+	map_mutex.lock();
+	int i;
+	for (i = 0; i < 10; i++) {
+		ballpos_temp[i] = -1;
+	}
+	for (i = 0; i < sizeof(ballpos -> data); i++) {
+		if (i > 10) {
+			continue;
+		}
+		ballpos_temp[i] = ballpos -> data[i];
+	}
+	map_mutex.unlock();
+}
+
 
 // MAIN FUNCTION
 int main(int argc, char **argv)
@@ -229,8 +251,8 @@ int main(int argc, char **argv)
 	float x_obj0, y_obj0, x_obj1, y_obj1;
 
 	// Local Constants for loop 3
-	int m_ball = 3;
-	int n_ball = 6;
+	int m_ball = 0; // TO DO
+	int n_ball = 3; // TO DO
 	int n_obs = 6;
 	float x_hole = 8;
 	float y_hole = 1.5;
@@ -246,6 +268,8 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
+	ros::Subscriber sub_ballpos = n.subscribe<std_msgs::Float64MultiArray>("/ball_position", 256, ballpos_Callback); ///// TO DO /////
+
 
 	ros::Publisher pub_mode = n.advertise<std_msgs::Float64>("/mapdata/mode", 16);
 	ros::Publisher pub_map = n.advertise<std_msgs::Float64MultiArray>("/mapdata/stage_position", 16);
@@ -263,6 +287,14 @@ int main(int argc, char **argv)
 
 			map_msg.data = map_data;
 			pub_map.publish(map_msg);
+
+	///// TO DO /////
+	// Initialize map
+	for (int tmp1=0; tmp1 < 500; tmp1++) {
+		for (int tmp2=0; tmp2 < 300; tmp2++) {
+			ballpos_map[tmp1][tmp2] = 0;
+		}
+	}
 
 	// Loop : Process data and Publish message every 200ms
 	while(ros::ok){
@@ -287,6 +319,7 @@ int main(int argc, char **argv)
 		mode_msg.data = mode;
 		pub_mode.publish(mode_msg);		
 
+		mode = 1; // TO DO --- ADDED FOR DEBUGGING //
 		// Loop 1 : Branched navigation
 		if (mode) {
 
@@ -391,8 +424,104 @@ int main(int argc, char **argv)
 			std::cout << "Position : " << map_data.at(1) << ", " << map_data.at(2) << "  Orientation : " << map_data.at(0) << std::endl;
 
 			// Loop A - 2 : Position objects on the map, to be implemented
+			// TO DO //
+			std::cout << "Entered loop2" << std::endl;;
 			
-			
+			float theta_temp[5];
+			float dist_temp;
+			float ballx_temp, bally_temp;
+			int ballx, bally;
+			int a2_cnt;
+
+			if (ballpos_temp[0] == -1) {
+				std::cout << "No new info about ball" << std::endl;
+			}
+			else if (std::isnan(x_abs) || std::isnan(y_abs)) {
+				std::cout << "Car pos is nan so cannot calculate ball position" << std::endl;
+			}
+			else {
+				for (a2_cnt=0; a2_cnt < 10; a2_cnt += 2) { // Calculate angle to the ball
+					if (ballpos_temp[a2_cnt + 1] != 0) {
+						theta_temp[a2_cnt / 2] = atan(ballpos_temp[a2_cnt] / ballpos_temp[a2_cnt + 1]);
+					}
+					else {
+						ballpos_temp[a2_cnt] = -1;
+					}
+				}
+
+				for (a2_cnt=0; a2_cnt < 5; a2_cnt++) { // Put ball position to ballpos_map
+					if (theta_temp[a2_cnt] == -1) { // Case no ball
+						continue;
+					}
+					else { // Calculation by distance and angle to the ball
+						ballx_temp = ballpos_temp[2 * a2_cnt];
+						bally_temp = ballpos_temp[2 * a2_cnt + 1];
+						dist_temp = sqrt(ballx_temp * ballx_temp + bally_temp * bally_temp);
+						ballx_temp = x_abs + dist_temp * cos(theta_temp[a2_cnt] + RAD(theta));
+						bally_temp = y_abs + dist_temp * sin(theta_temp[a2_cnt] + RAD(theta));
+						ballx_temp = round(100 * ballx_temp);
+						bally_temp = round(100 * bally_temp);
+						ballx = (int) ballx_temp;
+						bally = (int) bally_temp;
+						if ((ballx >= 300) && (ballx < 800) && (bally >= 0) && (bally < 300)) { 
+							std::cout << "ballx :" << ballx << std::endl;
+							std::cout << "bally :" << bally << std::endl;
+							ballpos_map[ballx - 300][bally] += 1;
+						}
+					}
+				}
+
+				// Find top3 area
+				int top3[3][3];
+				int findx, findy, top_tmp;
+
+				for (findx = 0; findx < 3; findx++) {
+					for (findy = 0; findy < 3; findy++) {
+						top3[findx][findy] = 0;
+					}
+				}
+
+				for (findx = 0; findx < 500; findx++) {
+					for (findy = 0; findy < 300; findy++) {
+						if (ballpos_map[findx][findy] > top3[0][0]) {
+							top3[2][0] = top3[1][0];
+							top3[2][1] = top3[1][1];
+							top3[2][2] = top3[1][2];
+							top3[1][0] = top3[0][0];
+							top3[1][1] = top3[0][1];
+							top3[1][2] = top3[0][2];
+							top3[0][0] = ballpos_map[findx][findy];
+							top3[0][1] = findx;
+							top3[0][2] = findy;
+						}
+						else if (ballpos_map[findx][findy] > top3[1][0]) {
+							top3[2][0] = top3[1][0];
+							top3[2][1] = top3[1][1];
+							top3[2][2] = top3[1][2];
+							top3[1][0] = ballpos_map[findx][findy];
+							top3[1][1] = findx;
+							top3[1][2] = findy;
+						}
+						else if (ballpos_map[findx][findy] > top3[2][0]) {
+							top3[2][0] = ballpos_map[findx][findy];
+							top3[2][1] = findx;
+							top3[2][2] = findy;
+						}
+						else {
+							continue;
+						}
+					}
+				}
+
+				for (i_ball = 0; i_ball < n_ball; i_ball++) { // Set blue ball position to ball list
+					x_ball[i_ball] = ((float) top3[i_ball][1]) / 100 + 3;
+					y_ball[i_ball] = ((float) top3[i_ball][2]) / 100;
+					// std::cout << "top3x:" << top3[i_ball][1] << "top3y:" << top3[i_ball][2] << std::endl;
+					// std::cout << "xpos: " << x_ball[i_ball] << "ypos: " << y_ball[i_ball] << std::endl;
+				}
+
+			}
+			// TO DO ENDS //
 
 
 			// Loop A - 3 : Find optimal global & local path
