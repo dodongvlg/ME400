@@ -232,11 +232,20 @@ while not rospy.is_shutdown():
     if e < -pi:
       e = e + 2*pi
     print('error: ', e)
+
+    #calculate spd
+    e_spd = find_length(path_v, [0,0])
+    spd = e_spd*4.5
+    if spd > 4.5:
+      spd = 4.5
+
+
+    #actuate motor with PID control based on the orientation error
     e_i = e_i + e
     e_d = e - e_old
     result = (e*p_gain + e_i*i_gain + e_d*d_gain)
-    #print('result: ', result)
-    motor_cmd.data = [(spd - result), (spd + result)]
+    motor_cmd.data = [(2.5 + spd - result), (2.5 + spd + result)]
+    pub.publish(motor_cmd)
 
 
     print('motor_cmd: ', motor_cmd.data)

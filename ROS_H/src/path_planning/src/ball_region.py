@@ -13,7 +13,6 @@ from math import pi
 from math import acos
 from math import cos
 from math import sin
-
 def find_length(start, end):
   return sqrt((start[0]-end[0])**2+(start[1]-end[1])**2)
 
@@ -42,7 +41,7 @@ def find_intersection(start,end,obstacle,r):
 #calculate whether the intersection length is within l_cr
 #if yes, return [True, 0] 
 #else, return [False, mid_path]
-def div_path(start, end, obstacle, real_end):
+def div_path(start, end, obstacle, real_end, mode):
   r = 0.4
   l_cr = r/3
 
@@ -104,7 +103,20 @@ def div_path(start, end, obstacle, real_end):
   mid_path = x[0]
   if find_length(x[0], midpoint) > find_length(x[1], midpoint):
     mid_path = x[1]
-  return[False, mid_path]
+  if mode == 1:
+    pillar_list = []
+    for pillar in obstacle_list:
+      pillar_list.append([find_length(pillar, obstacle), pillar])
+    pillar_list.sort()
+    pillar = pillar_list[1][1]
+    print("nearest pillar: ", pillar)
+    if find_length(mid_path, pillar) > 0.4:
+      return [False, mid_path]
+    else:
+      if mid_path == x[0]:
+        return [False, x[1]]
+      return [False, x[0]]
+  return [False, mid_path]
 
 #update path_list by adding midpoint to index i+1
 def update_list(path_list, midpoint, i):
@@ -121,14 +133,17 @@ def update_list(path_list, midpoint, i):
 def detour(path_list, obstacle):
   i = len(path_list)-2
   final_destination = path_list[-1]
-  result = div_path(path_list[i], final_destination, obstacle, final_destination)
+  if len(obstacle_list) > 4 and obstacle == obstacle_list[-1]:
+    result = div_path(path_list[i], final_destination, obstacle, final_destination, 1)
+  else:
+    result = div_path(path_list[i], final_destination, obstacle, final_destination, 0)
   if result[0] == True:
     return path_list
   else:
     path_list = update_list(path_list, result[1], i)
     n = len(path_list)
     while i+1 < n:
-      result = div_path(path_list[i], path_list[i+1], obstacle, final_destination)
+      result = div_path(path_list[i], path_list[i+1], obstacle, final_destination,0)
       if result[0] == True:
         i = i + 1
       else:
@@ -136,6 +151,24 @@ def detour(path_list, obstacle):
       n = len(path_list)
     return path_list
 
+
+def get_path_list(obstacle_list, start):
+  global path_list
+  dist_list = []
+  i = 0
+  for obstacle in obstacle_list:
+    dist_list.append([find_length(start, obstacle), i])
+    i = i + 1
+  dist_list.sort()
+  
+  sorted_obstacle_list = []
+  for element in dist_list:
+    sorted_obstacle_list.append(obstacle_list[element[1]])
+
+  for obstacle in sorted_obstacle_list:
+    path_list = detour(path_list, obstacle)
+  
+  return path_list
 
 def update_robot_pos(data):
   data2 = data.data
@@ -167,24 +200,6 @@ def update_robot_pos2(data):
   car2 = [data2.position.x, data2.position.y, yaw + pi]
 
 
-
-def get_path_list(obstacle_list, start):
-  global path_list
-  dist_list = []
-  i = 0
-  for obstacle in obstacle_list:
-    dist_list.append([find_length(start, obstacle), i])
-    i = i + 1
-  dist_list.sort()
-  
-  sorted_obstacle_list = []
-  for element in dist_list:
-    sorted_obstacle_list.append(obstacle_list[element[1]])
-
-  for obstacle in sorted_obstacle_list:
-    path_list = detour(path_list, obstacle)
-  
-  return path_list
 
 def motor_actuation(path_list, car):
   
@@ -283,11 +298,19 @@ def align(target_ball_pos):
         motor_cmd.data = [-5, +5]
         pub.publish(motor_cmd)  
     if e > 0:
-      motor_cmd.data = [-2, +2]
-      pub.publish(motor_cmd)
+      if abs(e) > 0.4:
+        motor_cmd.data = [-4, +4]
+        pub.publish(motor_cmd)
+      else:
+        motor_cmd.data = [-1, +1]
+        pub.publish(motor_cmd)
     else:
-      motor_cmd.data = [+2, -2]
-      pub.publish(motor_cmd)
+      if abs(e) > 0.4:
+        motor_cmd.data = [+4, -4]
+        pub.publish(motor_cmd)
+      else:
+        motor_cmd.data = [+1, -1]
+        pub.publish(motor_cmd)
     print("aligning")
     print("error: ", e)
     print('motor_cmd: ', motor_cmd.data)
