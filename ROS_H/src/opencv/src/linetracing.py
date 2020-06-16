@@ -3,18 +3,6 @@ import rospy
 import cv2
 import numpy as np
 
-'''
-***import for line orienation and image comparison
-windows =>
-    pip install scikit-image
-ubuntu =>
-    sudo apt-get install python3-matplotlib python3-numpy python3-pil python3-scipy python3-tk
-    sudo apt-get install build-essential cython3
-'''
-
-from skimage import measure
-###################################################
-
 from std_msgs.msg import Float64 ,Int64
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -22,38 +10,51 @@ import math
 
 
 
-bridge = CvBridge()
 
-cam_distance = 0.25 # 250mm
-f_mm = 3.67 / 1000
-sensor_width = 4.8 / 1000
-pixel_width = 1920
-f_pixel = f_mm * pixel_width / sensor_width
-disparity = 0
-img_left = 0
-img_right = 0
-img_center = np.zeros((1080,1920,3),dtype=np.uint8)
-
-
-cnt = 0
-
-#################parameters for ball detection ########################
-b = [98, 131, 131, 255, 0, 255]  
-bC = [1, 101, 68, 8, 0, 68, 1]	# parameter related to circles (dp,minDist,param1,param2,minRadius,maxRadius,BlurSize)
-
-i=0;
-globalStart=0.6;
-globalEnd=0.98
 
 '''
-CENTER CAMERA HSV PARAMS
-'''  
+***required imports
+Method 1 =>
+    ( python 2.7) 
+    sudo apt install python-pip  
+    pip install scikit-image
 
+    ( python 3.x )
+    sudo apt install python3-pip
+    pip3 install scikit-image
+
+Method 2=>
+    sudo apt-get install python3-matplotlib python3-numpy python3-pil python3-scipy python3-tk
+    sudo apt-get install build-essential cython3
+'''
+###################################################
+from skimage import measure
+###################################################
+
+
+
+
+
+bridge = CvBridge()
+img_center = np.zeros((1,1,3),dtype=np.uint8)
+
+
+
+######################pusblisher variables#########
 regionFlag=Int64()
 holderFlag=Int64()
 xc=Int64()
 orientation = Float64()
 xcDocking = Float64()
+###################################################
+'''
+CENTER CAMERA HSV PARAMS
+'''  
+blueMask=[98,131,131,255,0,255]
+greenMask=[50,115,131,255,8,252]
+redMask = [142,180,99,255,8,252];
+redMask_=[0,4,99,255,8,252]
+###################################################
 
 
 
@@ -65,9 +66,6 @@ def adjustOrientationValue(val):
     '''
     if val >= 0 : return val - math.pi/2
     else : return val + math.pi /2 
-def compareMSE(imageA, imageB):
-    m = mse(imageA, imageB)
-    return m
 def selectSection(img,verticalStart=-1,verticalEnd=-1,horizontalStart=-1,horizontalEnd=-1,value = 0):
     #select part of an image as a percentage of height start and end
     # for example start = 0.5 , end = 1 means start from middle and end at the bottom of frame
@@ -94,7 +92,7 @@ def getProp(binaryImage):
     regions = measure.regionprops(binaryImage)
     if regions !=[] :return regions[0] 
     else: return []
-def ballHolderState(img,thresh=1):
+def ballHolderState(img,thresh, redBallMask,blueBallMask):
     '''
     thresh = > minimum ratio of mask and ball intersection measured using white pixels
     outputs  
@@ -103,122 +101,38 @@ def ballHolderState(img,thresh=1):
         2=> if red ball in holder
     '''
     
-    
-    def compareHolder(binaryImg, x= 960 , y = 1300, radius = 450 ):
-        yy,xx= binaryImg.shape
+    def compareHolder(img, x= 960 , y = 1300, radius = 450 ):
+        yy,xx= img.shape
         f =np.zeros((yy,xx,3),dtype=np.uint8)
         mask = cv2.circle(f.copy(),(x,y ),radius,(255,255,255),-1);mask=mask[:,:,0]
         
-        #print(mask.shape)
-        #print(img.shape)
-        maskAndImg= cv2.bitwise_and(mask,binaryImg)
-        
+        maskAndImg= cv2.bitwise_and(mask,img)
         
         maskWhitePixels = float(cv2.countNonZero(mask))
         maskAndImgWhitePixels= float(cv2.countNonZero(maskAndImg))
-        print(maskAndImgWhitePixels  / maskWhitePixels)
-        return maskAndImgWhitePixels  / maskWhitePixels   ,  maskAndImg 
+        return maskAndImgWhitePixels  / maskWhitePixels  
 
+    ratioBlue= compareHolder(blueBallMask) ; 
 
-
-
-    blueMask=[98,131,131,255,0,255]
-    greenMask=[50,115,131,255,8,252]
-    redMask = [142,180,99,255,8,252];redMask_=[0,4,99,255,8,252]
-
-    redMaskHSV = selectSection(getColorMask(img.copy(),redMask,redMask_),0.5,1)
-    blueMaskHSV = selectSection(getColorMask(img.copy(),blueMask),0.5,1)
-
-    ratioBlue ,andMask = compareHolder(blueMaskHSV) ; 
-
-
-    if ratioBlue >=thresh : print("true blue") ;return 1,blueMaskHSV,andMask 
+    if ratioBlue >=thresh : 
+        print("holder: blue ball ") ;
+        return 1 
+    
     else :
-        ratioRed,andMask = compareHolder(redMaskHSV)
-        print("red ration", ratioRed,ratioRed >= thresh)
+        ratioRed= compareHolder(redBallMask)
         if ratioRed >= thresh : 
-            #print("true red");
-            return 2,redMaskHSV,andMask
-        else : return 0, np.zeros((1,1,3),dtype=np.uint8),np.zeros((1,1,3),dtype=np.uint8)
-
-
-    '''
-    imgCenter=img.shape[1]//2
-
-    ##check if red ball is in holder
-    redBallMask = selectSection(getColorMask(img,rp,rp_),0.8,1,0.3,0.7)
-    if cv2.countNonZero(redBallMask) > 0 :
-        props = getProp(redBallMask)
-        if abs(imgCenter-props.centroid[1]) < thresh : return 2
-    
-    ##check if blue ball is in holder
-    blueBallMask = selectSection(getColorMask(img,bp),0.8,1,0.3,0.7)
-    if cv2.countNonZero(blueBallMask) > 0 :
-        props = getProp(blueBallMask)
-        if abs(imgCenter-props.centroid[1]) < thresh : return 1
-    
-    #No ball in holder
-    return 0
-    '''
-
-
-def regionState(img,thresh):
-    '''
-    input : 
-        thresh => minimum number of colored pixel to declare it's ball region 
-        bp,rp,rp_ => hsv parameters list of blue , red , red_
-        
-    outputs  
-        0=> line tracing region
-        1=> ball harvesting region
-    '''
-        
-    ##check if red or blue ball is visible
-    blueMask=[98,131,131,255,0,255]
-    greenMask=[50,115,131,255,8,252]
-    redMask = [142,180,99,255,8,252];redMask_=[0,4,99,255,8,252]
-
-
-    redBallMask = getColorMask(img,redMask,redMask_)
-    blueBallMask = getColorMask(img,blueMask)
-    
+            print("holder: red ball ") ;
+            return 2
+        else : 
+            print("holder: no ball ")
+            return 0
+def regionState(img,thresh,redBallMask,blueBallMask):
     if cv2.countNonZero(redBallMask) > thresh  or cv2.countNonZero(blueBallMask) > 0 :
+        print("---------------ball harvesting region------------------------------------")
         return 1
     
+    print("---------------line tracing region------------------------------------")
     return 0
-
-
-def regionState(img,thresh):
-    '''
-    input : 
-        thresh => minimum number of colored pixel to declare it's ball region 
-        bp,rp,rp_ => hsv parameters list of blue , red , red_
-        
-    outputs  
-        0=> line tracing region
-        1=> ball harvesting region
-    '''
-        
-    ##check if red or blue ball is visible
-    blueMask=[98,131,131,255,0,255]
-    greenMask=[50,115,131,255,8,252]
-    redMask = [142,180,99,255,8,252];redMask_=[0,4,99,255,8,252]
-
-
-    redBallMask = getColorMask(img,redMask,redMask_)
-    blueBallMask = getColorMask(img,blueMask)
-    
-    if cv2.countNonZero(redBallMask) > thresh  or cv2.countNonZero(blueBallMask) > 0 :
-        return 1
-    
-    return 0
-
-
-
-
-
-
-
 def getColorMask(img,p1,p2=[]):
     
     hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -238,17 +152,13 @@ def getColorMask(img,p1,p2=[]):
     res=cv2.bitwise_and(img,img,mask=mask)
     
     return mask
-
-def getCentroidOrientation(img,start=0,end=1,flag=0):
+def getCentroidOrientation(img,start=0,end=1):
     '''
     start portion of image vertically
     end portion of image vertically
     for example start : 0.5 end :1 means get orientation of line from middle to bottom
     
     ***return -1 ,-1 if no line is found
-
-    flag= 0 => no eigen image
-    flag =1 => output eigen image
     
     '''
 
@@ -257,38 +167,14 @@ def getCentroidOrientation(img,start=0,end=1,flag=0):
     
     if props !=[] :
         x,ori =  props.centroid[1]  , adjustOrientationValue(props.orientation)
-        if flag == 1 :  #Drawn image
-            eigenImg= drawProps(props,selectSection(thresh[:,:,0],start,end)) 
-            return x,ori,eigenImg
-        elif flag ==0 :  #No image
-            return x,ori,np.zeros((1,1,3),dtype=np.uint8)
-    else : return -1,-1,np.zeros((1,1,3),dtype=np.uint8)
-
-
-
-
-def drawProps(props,binaryImage):
-    if props !=[]:
-        image = cv2.cvtColor(binaryImage,cv2.COLOR_GRAY2BGR)
-        y0, x0 = props.centroid
-        ori = props.orientation
-        x1 = x0 + math.cos(ori) * 0.5 * props.minor_axis_length
-        y1 = y0 - math.sin(ori) * 0.5 * props.minor_axis_length
-        x2 = x0 - math.sin(ori) * 0.5 * props.major_axis_length
-        y2 = y0 - math.cos(ori) * 0.5 * props.major_axis_length
-        minr, minc, maxr, maxc = props.bbox
-        x0,y0,x1,y1,x2,y2 = map(int,[x0,y0,x1,y1,x2,y2])
-        image = cv2.circle(image,(x0,y0),1,(0,0,255),-1)   #draw centroid
-        image = cv2.line (image , (x0,y0),(x1,y1),(255,0,255),2)
-        image = cv2.line (image , (x0,y0),(x2,y2),(255,0,0),2)
-        #print(y0,x0,(orientation+ math.pi/2) *180 / math.pi)
-        return image
-    else :
-        return binaryImage
-
-
-
-def getCentroidBall(img):
+        print ("line x centroid :" ,x )
+        print("line orientation: ", ori)
+        return x,ori
+    else : 
+        print ("line x centroid :" ,"not detected" )
+        print ("line orientation: ", "not detected")
+        return -1,-1
+def getCentroidBall(img, thresh,blueBallMask):
     '''
     Get accurate position of ball at docking position
     
@@ -300,173 +186,97 @@ def getCentroidBall(img):
         for r in regions:
             if r.eccentricity <= thresh :
                 yield r
-    
-    # def findNearestRegion(regions,thresh):
-    #     #thresh is center x
-    #     curMin = 2000
-    #     curMinR = None
-    #     for r in regions : 
-    #         delta= abs(r.centroid[1]-thresh)
-    #         if curMin >= delta  : curMin,curMinR = delta, r
-    #     if curMinR !=None :
-    #         return curMinR.centroid[1],curMinR.centroid[0], math.sqrt((curMinR.area/math.pi))
-    #     else :
-    #         return -2,-2,-2
-    
 
     def filterBallsByArea(regions,baseArea=189738):
         curRegion = None
         for r in regions :
-            if  r.area >= baseArea*0.7 :# and r.area <= baseArea*1.3 :
+            if  r.area >= thresh*0.7 :# and r.area <= baseArea*1.3 :
                 if r.area > curRegion : curRegion=r
         if curRegion is None : return -2,-2,-2
         else : return curRegion.centroid[1],curRegion.centroid[0], math.sqrt((curRegion.area/math.pi))
 
-    # 208711
-    #170764
-    
-
-    
-    # def getHoughCircles(frame,l):
-    #     class circle :
-    #         def __init__ (self,x,y,r):
-    #             self.x=int(x)
-    #             self.y=int(y)
-    #             self.r=int(r)
-
-
-    #     if l[6]%2 == 0 : l[6] +=1
-    #     frame=cv2.blur(frame,(l[6],l[6]))
-    #     highlight=frame.copy()
-
-    #     if len(frame.shape)==3 : frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY) 
-    #     else : highlight=cv2.cvtColor(frame,cv2.COLOR_GRAY2BGR)
-    #     c = cv2.HoughCircles(frame, cv2.HOUGH_GRADIENT,  l[0], 
-    #                          l[1], param1 = l[2], param2 = l[3], minRadius=l[4], maxRadius=l[5])
-        
-    #     if c is not None : 
-    #         return circle(c[0][0][0],c[0][0][1],c[0][0][2]); 
-        
-    #     else : 
-    #         return circle(0,0,0)
-    
-    
-        
-    '''
-    use Hough circle with predefined params 
-    use region props with after passing tests of eccentricity 
-    in case of multiple regions => take the ball closer to center
-    '''
     half = img.shape[1]/2
-    #- ( x-half) / half     #ranges from -1 to 1
-    
-    blueMask=[98,131,131,255,0,255]
-    blue=getColorMask(img.copy(),blueMask)
-    labeled = measure.label(blue.copy())
+
+    labeled = measure.label(blueBallMask)
     regions = measure.regionprops(labeled)
     x1,y1,r1 = filterBallsByArea(eccentricityThresh (regions ,0.5))
 
-    
-    
-    # #### Hough methood
-    # bC=[1,2000,68,8,120,300,5]
-    # circle = getHoughCircles(blue,bC)
-    # x2,y2,r2 = circle.x,circle.y,circle.r
-    
-    x11,y11,r11 = map(int, [x1,y1,r1])
-    
-    if x1 != -2 : regionMethod = cv2.circle(cv2.cvtColor(blue.copy(),cv2.COLOR_GRAY2BGR),(x11,y11),r11,(0,0,255),4)
-    # houghMethod = cv2.circle(cv2.cvtColor(blue.copy(),cv2.COLOR_GRAY2BGR),(x2,y2),r2,(255,0,0),4)
 
-    
-    
-    #print("region method ", x1,y1,r1)
-    #print("hough method " , x2,y2,r2)
-    
-    if x1 != -2 : return -(x1-half)/half ,regionMethod
-    else : return -2, blue
+    if x1 != -2 : 
+        print("center camera detected blue ball in sight")
+        return -(x1-half)/half 
+    else : return -2
 
 
     #return regionMethod,houghMethod
 
-
-
     
 def center_circle_callback(data) :
     global regionFlag,holderFlag,xc,orientation
-    global blueMask , redMask , redMask_
-    global blueMaskHolder , redMaskHolder , redMaskHolder_
-    '''
-    three tasks 
-     1 - detect if the car is in line tracing[=0] or ball harvesting region[=1]
-     2 - detect if blue ball[=1] , red ball[=2] or not ball in holder [=0]
-     3 - give orientation and horizontal centroid of line 
-    '''
+    global blueMask , redMask ,redMask_
     
-    global i;
+    
+    '''
+    Four tasks 
+     1 - detect if the car is in line tracing[=0] or ball harvesting region[=1]   => regionState
+     2 - detect if blue ball[=1] , red ball[=2] or not ball in holder [=0]        => ballHolderState
+     3 - give orientation and horizontal centroid of line                         => getCentroidOrientation
+     4 - give accurate position of ball when aligning in docking position         => getCentroidBall
+    '''
+
+    '''
+    if region is line tracing =>
+        get orientation and centroid of line
+        if slope is detected =>
+            set orientation=0 and move at full speed up
+    
+    else if region is ball harvesting =>
+        get holder content ( no ball, blue ball , red ball)
+        get accurate position of ball using center camera when aligning in docking position
+    '''
 
     img_center = bridge.imgmsg_to_cv2(data, "bgr8")
-    #cv2.imwrite("holders/"+str(i)+".png",img_center)
-    
-    
-    #print(img_center.shape[1]
-    #cv2.namedWindow("eig",cv2.WINDOW_NORMAL);cv2.namedWindow("eig2",cv2.WINDOW_NORMAL)
 
-    if regionFlag.data !=1 : regionFlag.data = regionState(img_center,5)
-    else : pass #print("now entering ball harvesting")
+    redBallMask = getColorMask(img_center,redMask,redMask_)
+    blueBallMask = getColorMask(img_center,blueMask)
 
-    key = cv2.waitKey(1) & 0xff
-    if key == 27 : cv2.destroyAllWindows()
+
+    
+    if regionFlag.data !=1 : 
+        regionFlag.data = regionState(img_center,5,redBallMask,blueBallMask)
+
+
     
     #line tracing region
     if regionFlag.data == 0 :
-        #define start and end of window of capturing######################
-        
-        #######################
-        #cv2.namedWindow("raw",cv2.WINDOW_NORMAL)
 
-        
-        #orientation.data= adjustOrientationValue(orientation.data)
-        
-        xc2,orientation2,outputImage2 = getCentroidOrientation(img_center,0,0.4,1)
+        xc2,orientation2= getCentroidOrientation(img_center,0,0.4)     #proprties of top half of view
 
-        '''
-        if there is no line in top half then make orienttation =0 
-        '''
-
-        if xc2!=-1 :xc.data,orientation.data,outputImage = getCentroidOrientation(img_center,0.6,0.98,1)
-        else : xc.data,orientation.data,outputImage = getCentroidOrientation(img_center,0.81,0.99,1);orientation.data =0
-
-        #cv2.imshow("eig", outputImage) #this line shows the eigen vectors of bottom half - remove it after testing
+        if xc2!=-1 :
+            xc.data,orientation.data = getCentroidOrientation(img_center,0.6,0.98)
         
-        #cv2.imshow("eig2", outputImage2) #this line shows the eigen vectors of top half - remove it after testing
+        else : 
+            xc.data,orientation.data = getCentroidOrientation(img_center,0.81,0.99);
+            print("move straight")
+            orientation.data =0   #  if there is no line in top half then make orienttation =0 
 
-        
+
     
     #ball harvesting region
     elif regionFlag.data == 1 :
-        holderFlag.data,holderImg,andMask = ballHolderState(img_center)  
-        cv2.namedWindow("hough",cv2.WINDOW_NORMAL);cv2.namedWindow("holder",cv2.WINDOW_NORMAL);cv2.namedWindow("region",cv2.WINDOW_NORMAL)
         
-
-
-
-
-
-
-        xcDocking.data,regionImg = getCentroidBall(img_center)
-        print("========",i,"=====================")
-        print ("docking centroid", xcDocking.data)
-        # imgregion , imghough = getCentroidBall(img_center)
-
+        holderFlag.data = ballHolderState(img_center,
+                                         1,
+                                         selectSection(redBallMask,0.5,1),
+                                         selectSection(blueBallMask,0.5,1) )  
         
-        cv2.imshow("holder",regionImg)
-        cv2.imwrite(str(i)+".png",regionImg)
-        i+=1
-        # cv2.imshow("region",imgregion)
-        # cv2.imshow("hough",imghough)
+        
+        xcDocking.data = getCentroidBall(img_center,0.7 , blueBallMask)
 
-
+    
+    print("")
+    print("---------------------------------------------------------------------------------")
+    print("")
 
     
     
@@ -478,7 +288,10 @@ if __name__ == '__main__':
 #   rospy.Subscriber("/camera_left/rgb/image_raw", Image, left_circle_callback)
 #   rospy.Subscriber("/camera_right/rgb/image_raw", Image, right_circle_callback)
     rospy.Subscriber("/camera_center/rgb/image_raw", Image,center_circle_callback )
-    
+    #rospy.Subscriber("/camera_left/rgb/image_raw", Image,left_circle_callback )
+    #rospy.Subscriber("/camera_right/rgb/image_raw", Image,right_circle_callback )
+
+
     ####line tracing publishers######################################################
     regionFlag_pub = rospy.Publisher("/regionFlag", Int64, queue_size = 10)
     holderFlag_pub = rospy.Publisher("/holderFlag", Int64, queue_size = 10)
