@@ -103,13 +103,13 @@ def div_path(start, end, obstacle, real_end, mode):
   mid_path = x[0]
   if find_length(x[0], midpoint) > find_length(x[1], midpoint):
     mid_path = x[1]
+  #mode 1 means the target ball is too close to the pillar
   if mode == 1:
     pillar_list = []
     for pillar in obstacle_list:
       pillar_list.append([find_length(pillar, obstacle), pillar])
     pillar_list.sort()
     pillar = pillar_list[1][1]
-    print("nearest pillar: ", pillar)
     if find_length(mid_path, pillar) > 0.4:
       return [False, mid_path]
     else:
@@ -233,6 +233,10 @@ def motor_actuation(path_list, car):
   result = (e*p_gain + e_i*i_gain + e_d*d_gain)
   motor_cmd.data = [(2.5 + spd - result), (2.5 + spd + result)]
   pub.publish(motor_cmd)
+  pub1.publish(suspension_cmd)
+  pub2.publish(suspension_cmd)
+  pub3.publish(suspension_cmd)
+  pub4.publish(suspension_cmd)
 
   e_old = e
 
@@ -267,6 +271,10 @@ def motor_actuation_to_goal(path_list, car, speed):
   result = (e*p_gain + e_i*i_gain + e_d*d_gain)
   motor_cmd.data = [(speed - result), (speed + result)]
   pub.publish(motor_cmd)
+  pub1.publish(suspension_cmd)
+  pub2.publish(suspension_cmd)
+  pub3.publish(suspension_cmd)
+  pub4.publish(suspension_cmd)
 
   e_old = e
 
@@ -278,7 +286,9 @@ def motor_actuation_to_goal(path_list, car, speed):
 def align(target_ball_pos):
   #rotate correct direction
   e = 10
-  while abs(e) > 0.04:
+  kk = 0
+  while kk <60:
+  #while abs(e) > 0.04:
     path_v = [(target_ball_pos[0] - car[0]), (target_ball_pos[1] - car[1])]
     path_angle = acos(path_v[0]/sqrt(path_v[0]**2 + path_v[1]**2))
 
@@ -298,28 +308,71 @@ def align(target_ball_pos):
         motor_cmd.data = [-5, +5]
         pub.publish(motor_cmd)  
     if e > 0:
-      if abs(e) > 0.4:
+      if abs(e) > 0.5:
         motor_cmd.data = [-4, +4]
         pub.publish(motor_cmd)
       else:
-        vel = abs(e)*2.5+0.1
+        vel = abs(e)*2+0.1 
         motor_cmd.data = [-vel, +vel]
         pub.publish(motor_cmd)
     else:
-      if abs(e) > 0.4:
+      if abs(e) > 0.5:
         motor_cmd.data = [+4, -4]
         pub.publish(motor_cmd)
       else:
-        vel = abs(e)*2.5+0.1
+        vel = abs(e)*2+0.1
         motor_cmd.data = [+vel, -vel]
         pub.publish(motor_cmd)
+    
+    if vision_alignment_error != -2:
+      align_vision()
+      return 0
+    pub1.publish(suspension_cmd)
+    pub2.publish(suspension_cmd)
+    pub3.publish(suspension_cmd)
+    pub4.publish(suspension_cmd)
     print("aligning")
     print("error: ", e)
     print('motor_cmd: ', motor_cmd.data)
     print('car: ', car)
     print('real_car: ', car2)
+    print("vision alignment error: ", vision_alignment_error)
+    print('..')
+    kk = kk + 1
+    print("kk: ", kk)
+    rate.sleep()
+  return 1
+
+#more precise alignment done with camera vision
+def align_vision():
+  k = 0
+  while abs(vision_alignment_error) > 0.007 :#960px*0.05 ~= 50px
+    if vision_alignment_error == -2:
+      vel = 1
+    else:
+      vel = abs(vision_alignment_error)*2 + 0.1
+    if vision_alignment_error > 0:
+      motor_cmd.data = [-vel, +vel]
+      pub.publish(motor_cmd)
+    else:
+      motor_cmd.data = [+vel, -vel]
+      pub.publish(motor_cmd)
+    if abs(vision_alignment_error) < 0.01:
+      k = k + 1
+    if k > 10:
+      return 1
+    pub1.publish(suspension_cmd)
+    pub2.publish(suspension_cmd)
+    pub3.publish(suspension_cmd)
+    pub4.publish(suspension_cmd)
+    print("vision aligning")
+    print("error: ", vision_alignment_error)
+    print('motor_cmd: ', motor_cmd.data)
+    print('car: ', car)
+    print('real_car: ', car2)
     print('..')
     rate.sleep()
+  return 1
 
 
 #dummy
@@ -331,6 +384,8 @@ target = [5,1.5]
 docking = [6,1.6]
 region = -1
 holder_state = -1
+vision_alignment_error = -2
+align_result = 1
 
 #fixed parameters
 obstacle_list = [[4,1.5], [5.5,0.7], [5.5,2.3], [7,1.5]]
@@ -351,6 +406,10 @@ def update_holder_state(data):
   global holder_state
   holder_state = data.data
 
+def update_vision_alignment_error(data):
+  global vision_alignment_error
+  vision_alignment_error = data.data
+
 #publisher & subscriber
 pub = rospy.Publisher(motor_cmd_topic_name, Float64MultiArray, queue_size=10)
 pub1 = rospy.Publisher(suspension_topic_front_left, Float64, queue_size=10)
@@ -362,6 +421,7 @@ rospy.Subscriber("/mapdata/stage_position", Float64MultiArray, update_robot_pos)
 
 rospy.Subscriber("/regionFlag", Int64, update_region)
 rospy.Subscriber("/holderFlag", Int64, update_holder_state)
+rospy.Subscriber("/docking/centroid", Float64, update_vision_alignment_error)
 
 
 #node initiation
@@ -380,7 +440,7 @@ rate = rospy.Rate(20)
 
 #parameters to adjust
 spd = 7
-[p_gain, i_gain, d_gain] = [7, 0, 0]
+[p_gain, i_gain, d_gain] = [7, 0, 0.01]
 close_enough = 0.045
 goal = [8,1.5]
 goal_region = 0.3
@@ -396,28 +456,50 @@ while not rospy.is_shutdown():
   #if stuck, move backwards
   stuck_list.append(start)
   if len(stuck_list) > 51:
-    print("stuck? ", find_length(stuck_list[0], stuck_list[50]))
+    print("stucked? (if < 0.1) ", find_length(stuck_list[0], stuck_list[50]))
     k = 0
     if find_length(stuck_list[0], stuck_list[50]) < 0.1:
-      while k < 30:
-        print("stucked.. moving backwards")
+      while k < 15:
+        print("stucked..")
+        '''
+        if find_length(start, obstacle_list[0]) < 0.03 or find_length(start, obstacle_list[1]) < 0.03 or find_length(start, obstacle_list[2]) < 0.03 or find_length(start, obstacle_list[3]) < 0.03 or start[0] < 3.03 or start[0] > 7.97 or start[1] > 0.03 or start[1] > 2.97:
+          print("pillar or wall too close! rotating")
+          motor_cmd.data = [3,-3]
+          pub.publish(motor_cmd)          
+        '''
+        print("moving backwards")
         motor_cmd.data = [-2,-2]
         pub.publish(motor_cmd)
+        pub1.publish(suspension_cmd)
+        pub2.publish(suspension_cmd)
+        pub3.publish(suspension_cmd)
+        pub4.publish(suspension_cmd)
         rate.sleep()
         k = k + 1
         print("k: ", k)
+        print("...")
       stuck_list = []
     else:
       stuck_list.pop(0)
 
+  k = 0
   if holder_state != 1:
     obstacle_list.append(target)
     end = docking
 
     # after goal in
     while find_length(start, goal) < goal_region: 
+      while k < 5:
+        motor_cmd.data = [0,0] #first stop so that doesn't flip forward
+        pub.publish(motor_cmd)
+        k = k + 1
+        rate.sleep()
       start = [car[0], car[1]]
       motor_cmd.data = [-2,-2] #to avoid wheel to fall in the hole, move backwards
+      pub1.publish(suspension_cmd)
+      pub2.publish(suspension_cmd)
+      pub3.publish(suspension_cmd)
+      pub4.publish(suspension_cmd)
       pub.publish(motor_cmd)
       rate.sleep()
 
@@ -430,25 +512,31 @@ while not rospy.is_shutdown():
 
     else: #approached the proper docking point
       print("At docking point")
-      align(target) #align with the blue ball
+      align_result = align(target) #align with the blue ball
       motor_cmd.data = [0,0]
       pub.publish(motor_cmd)
       k = 0
-      while holder_state!= 1 and k < 40:
+      while holder_state!= 1 and k < 60 and align_result == 0:
         print("going for the blue ball")
         print("holder_state: ", holder_state)
         print("stuck if > 50: ", k)
-        motor_cmd.data = [5,5]
+        motor_cmd.data = [3,3]
+        pub1.publish(suspension_cmd)
+        pub2.publish(suspension_cmd)
+        pub3.publish(suspension_cmd)
+        pub4.publish(suspension_cmd)
         pub.publish(motor_cmd)
         k = k + 1
+        print("...")
         rate.sleep()
-      if k >= 40:
+      if k < 59:
         kk = 10
 
     obstacle_list.pop()
 
   while holder_state == 1 or kk > 0:
     print("Going to Goal region")
+    print("holder_state: ", holder_state)
     end = goal  #goal position
     start = [car[0], car[1]]
     if find_length(start, end) > 0.07: #approaching the goal area
@@ -462,4 +550,3 @@ while not rospy.is_shutdown():
 
   
   rate.sleep()
-
