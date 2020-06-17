@@ -72,6 +72,7 @@ int ballpos_map[500][300];
 float ballpos_temp[10];
 
 int region_flag = 0;
+int noball_flag = 0;
 
 // Matrix rotation
 // Input : 2x2 matrix to rotate
@@ -233,6 +234,12 @@ void flag_Callback(const std_msgs::Float64::ConstPtr& flag) {
 	map_mutex.unlock();
 }
 
+void noball_Callback(const std_msgs::Float64::ConstPtr& flag) {
+	map_mutex.lock();
+	noball_flag = flag->data;
+	map_mutex.unlock();
+}
+
 
 // MAIN FUNCTION
 int main(int argc, char **argv)
@@ -278,6 +285,7 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 	ros::Subscriber sub_ballpos = n.subscribe<std_msgs::Float64MultiArray>("/ball_position", 256, ballpos_Callback); ///// TO DO /////
 	ros::Subscriber sub_flag = n.subscribe<std_msgs::Float64>("/regionFlag", 256, flag_Callback); ///// TO DO /////
+	ros::Subscriber sub_noball = n.subscribe<std_msgs::Float64>("/no_ball", 256, noball_Callback); ///// TO DO /////
 
 
 	ros::Publisher pub_mode = n.advertise<std_msgs::Float64>("/mapdata/mode", 16);
@@ -441,6 +449,7 @@ int main(int argc, char **argv)
 			float ballx_temp, bally_temp;
 			int ballx, bally;
 			int a2_cnt;
+			float theta_rad = RAD(-theta);
 
 			if (ballpos_temp[0] == -1) {
 				std::cout << "No new info about ball" << std::endl;
@@ -450,11 +459,11 @@ int main(int argc, char **argv)
 			}
 			else {
 				for (a2_cnt=0; a2_cnt < 10; a2_cnt += 2) { // Calculate angle to the ball
-					if (ballpos_temp[a2_cnt + 1] != 0) {
-						theta_temp[a2_cnt / 2] = atan(ballpos_temp[a2_cnt] / ballpos_temp[a2_cnt + 1]);
+					if (ballpos_temp[a2_cnt] != 0) {
+						theta_temp[a2_cnt / 2] = atan(ballpos_temp[a2_cnt + 1] / ballpos_temp[a2_cnt]);
 					}
 					else {
-						ballpos_temp[a2_cnt] = -1;
+						theta_temp[a2_cnt / 2] = -1;
 					}
 				}
 
@@ -466,111 +475,178 @@ int main(int argc, char **argv)
 						ballx_temp = ballpos_temp[2 * a2_cnt];
 						bally_temp = ballpos_temp[2 * a2_cnt + 1];
 						dist_temp = sqrt(ballx_temp * ballx_temp + bally_temp * bally_temp);
-						ballx_temp = x_abs + dist_temp * cos(theta_temp[a2_cnt] + RAD(theta));
-						bally_temp = y_abs + dist_temp * sin(theta_temp[a2_cnt] + RAD(theta));
+						ballx_temp = x_abs + dist_temp * cos(theta_temp[a2_cnt] + theta_rad);
+						bally_temp = y_abs + dist_temp * sin(theta_temp[a2_cnt] + theta_rad);
 						ballx_temp = round(100 * ballx_temp);
 						bally_temp = round(100 * bally_temp);
 						ballx = (int) ballx_temp;
 						bally = (int) bally_temp;
+						// std::cout << "ballx :" << ballx << std::endl;
+						// std::cout << "bally :" << bally << std::endl;
 						if ((ballx >= 300) && (ballx < 800) && (bally >= 0) && (bally < 300)) { 
-							std::cout << "ballx :" << ballx << std::endl;
-							std::cout << "bally :" << bally << std::endl;
 							ballpos_map[ballx - 300][bally] += 1;
 						}
 					}
 				}
 
-				// Find top3 area
-				int top3[3][3];
-				int findx, findy, top_tmp;
-
-				for (findx = 0; findx < 3; findx++) {
-					for (findy = 0; findy < 3; findy++) {
-						top3[findx][findy] = 0;
-					}
-				}
-
-				for (findx = 0; findx < 500; findx++) {
-					for (findy = 0; findy < 300; findy++) {
-						if (ballpos_map[findx][findy] > top3[0][0]) {
-							top3[2][0] = top3[1][0];
-							top3[2][1] = top3[1][1];
-							top3[2][2] = top3[1][2];
-							top3[1][0] = top3[0][0];
-							top3[1][1] = top3[0][1];
-							top3[1][2] = top3[0][2];
-							top3[0][0] = ballpos_map[findx][findy];
-							top3[0][1] = findx;
-							top3[0][2] = findy;
-						}
-						else if (ballpos_map[findx][findy] > top3[1][0]) {
-							top3[2][0] = top3[1][0];
-							top3[2][1] = top3[1][1];
-							top3[2][2] = top3[1][2];
-							top3[1][0] = ballpos_map[findx][findy];
-							top3[1][1] = findx;
-							top3[1][2] = findy;
-						}
-						else if (ballpos_map[findx][findy] > top3[2][0]) {
-							top3[2][0] = ballpos_map[findx][findy];
-							top3[2][1] = findx;
-							top3[2][2] = findy;
-						}
-						else {
-							continue;
-						}
-					}
-				}
-
-				for (i_ball = 0; i_ball < n_ball; i_ball++) { // Set blue ball position to ball list
-					x_ball[i_ball] = ((float) top3[i_ball][1]) / 100 + 3;
-					y_ball[i_ball] = ((float) top3[i_ball][2]) / 100;
-					// std::cout << "top3x:" << top3[i_ball][1] << "top3y:" << top3[i_ball][2] << std::endl;
-					// std::cout << "xpos: " << x_ball[i_ball] << "ypos: " << y_ball[i_ball] << std::endl;
-				}
-
 			}
-			// TODO ENDS //
+
+			float car_p1_x, car_p2_x, car_p3_x, car_p4_x = 0;
+			float car_p1_y, car_p2_y, car_p3_y, car_p4_y = 0;
+			float car_r1 = sqrt(0.144 * 0.144 + 0.23422 * 0.23422);
+			float car_r2 = sqrt(0.3235 * 0.3235 + 0.23422 * 0.23422);
+			float car_th1 = atan(234.22 / 144);
+			float car_th2 = atan(323.5 / 144);
+			int cx1, cx2, cy1, cy2;
+
+			if ((theta_rad >= 0) && (theta_rad < M_PI/2)) {
+				car_p1_x = x_abs + car_r1 * cos(theta_rad + car_th1);
+				car_p1_y = y_abs + car_r1 * sin(theta_rad + car_th1);
+				car_p2_x = x_abs + car_r1 * cos(theta_rad - car_th1);
+				car_p2_y = y_abs + car_r1 * sin(theta_rad - car_th1);
+				car_p3_x = x_abs - car_r2 * cos(theta_rad + car_th2);
+				car_p3_y = y_abs - car_r2 * sin(theta_rad + car_th2);
+				car_p4_x = x_abs - car_r2 * cos(theta_rad - car_th2);
+				car_p4_y = y_abs - car_r2 * sin(theta_rad - car_th2);
+			}
+			else if ((theta_rad >= M_PI/2) && (theta_rad < M_PI)) {
+				car_p4_x = x_abs + car_r1 * cos(theta_rad + car_th1);
+				car_p4_y = y_abs + car_r1 * sin(theta_rad + car_th1);
+				car_p1_x = x_abs + car_r1 * cos(theta_rad - car_th1);
+				car_p1_y = y_abs + car_r1 * sin(theta_rad - car_th1);
+				car_p2_x = x_abs - car_r2 * cos(theta_rad + car_th2);
+				car_p2_y = y_abs - car_r2 * sin(theta_rad + car_th2);
+				car_p3_x = x_abs - car_r2 * cos(theta_rad - car_th2);
+				car_p3_y = y_abs - car_r2 * sin(theta_rad - car_th2);
+			}
+			else if ((theta_rad >= M_PI) && (theta_rad < 3 * M_PI/2)) {
+				car_p3_x = x_abs + car_r1 * cos(theta_rad + car_th1);
+				car_p3_y = y_abs + car_r1 * sin(theta_rad + car_th1);
+				car_p4_x = x_abs + car_r1 * cos(theta_rad - car_th1);
+				car_p4_y = y_abs + car_r1 * sin(theta_rad - car_th1);
+				car_p1_x = x_abs - car_r2 * cos(theta_rad + car_th2);
+				car_p1_y = y_abs - car_r2 * sin(theta_rad + car_th2);
+				car_p2_x = x_abs - car_r2 * cos(theta_rad - car_th2);
+				car_p2_y = y_abs - car_r2 * sin(theta_rad - car_th2);
+			}
+			else {
+				car_p2_x = x_abs + car_r1 * cos(theta_rad + car_th1);
+				car_p2_y = y_abs + car_r1 * sin(theta_rad + car_th1);
+				car_p3_x = x_abs + car_r1 * cos(theta_rad - car_th1);
+				car_p3_y = y_abs + car_r1 * sin(theta_rad - car_th1);
+				car_p4_x = x_abs - car_r2 * cos(theta_rad + car_th2);
+				car_p4_y = y_abs - car_r2 * sin(theta_rad + car_th2);
+				car_p1_x = x_abs - car_r2 * cos(theta_rad - car_th2);
+				car_p1_y = y_abs - car_r2 * sin(theta_rad - car_th2);
+			}
+
+			float ml1 = (car_p2_y - car_p1_y) / (car_p2_x - car_p1_x);
+			float ml2 = (car_p3_y - car_p2_y) / (car_p3_x - car_p2_x);
+			float ml3 = (car_p4_y - car_p3_y) / (car_p4_x - car_p3_x);
+			float ml4 = (car_p1_y - car_p4_y) / (car_p1_x - car_p4_x);
+
+			cx1 = (int) round(100 * car_p4_x);
+			cx2 = (int) round(100 * car_p2_x);
+			cy1 = (int) round(100 * car_p3_y);
+			cy2 = (int) round(100 * car_p1_y);
+
+			for (cx1; cx1 < cx2; cx1++) {
+				for (cy1; cy1 < cy2; cy1++) {
+					if ((cy1 < ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 > ml2 * (cx1 - car_p2_x) + car_p2_y)
+						&& (cy1 > ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 < ml4 * (cx1 - car_p4_x) + car_p4_y)) {
+							ballpos_map[cx1 - 300][cy1] = 0;
+						}
+				}
+			}
+
+
+			int old_ballx, old_bally;
+
+			if (noball_flag = 1) {
+				if ((map_data.at(5) > 3) && (map_data.at(6) > 0)) {
+					old_ballx = (int) round(100 * map_data.at(5));
+					old_bally = (int) round(100 * map_data.at(6));
+					for (cx1 = -7; cx1 < 8; cx1++) {
+						for (cx2 = -7; cx2 < 8; cx2++) {
+							ballpos_map[old_ballx - 300 - cx1][old_bally - cx2] = 0;
+						}
+					}
+				} 
+			}
+
+			// Find top area
+			int top[3];
+			int findx, findy;
+
+			for (findx = 0; findx < 3; findx++) {
+				top[findx] = -1;
+			}
+
+			for (findx = 0; findx < 500; findx++) {
+				for (findy = 0; findy < 300; findy++) {
+					if ((ballpos_map[findx][findy] != 0) && (ballpos_map[findx][findy] > top[0])) {
+						top[0] = ballpos_map[findx][findy];
+						top[1] = findx;
+						top[2] = findy;
+					}
+				}
+			}
+
+			x_ball[0] = ((float) top[1]) / 100 + 3;
+			y_ball[0] = ((float) top[2]) / 100;
+			
+			// TO DO ENDS //
 
 
 			// Loop A - 3 : Find optimal global & local path
+			// near_ball = 0;
+			// near_dist = 5;
+			// for (i_ball = m_ball; i_ball < n_ball; i_ball++) {
+			// 	dist = calc_dist(x_abs, x_ball[i_ball], y_abs, y_ball[i_ball]);
+			// 	if (dist < near_dist) {
+			// 		near_dist = dist;
+			// 		near_ball = i_ball;
+			// 	}
+			// }
+			// x_obj1 = x_ball[near_ball];
+			// y_obj1 = y_ball[near_ball];
 			near_ball = 0;
-			near_dist = 5;
-			for (i_ball = m_ball; i_ball < n_ball; i_ball++) {
-				dist = calc_dist(x_abs, x_ball[i_ball], y_abs, y_ball[i_ball]);
-				if (dist < near_dist) {
-					near_dist = dist;
-					near_ball = i_ball;
-				}
-			}
 			x_obj1 = x_ball[near_ball];
 			y_obj1 = y_ball[near_ball];
-			
 
-			agl_dock = atan((y_hole - y_obj1) / (x_hole - x_obj1));
-			
-			danger = 1;
-			while (danger) {
-				x_obj0 = x_ball[near_ball] - dst_dock * cos(agl_dock);
-				y_obj0 = y_ball[near_ball] - dst_dock * sin(agl_dock);
-				danger = 0;
-				for (i_obs = 0; i_obs < n_obs; i_obs++) {
-					if (calc_dist(x_obj0, x_obs[i_obs], y_obj0, y_obs[i_obs]) < dst_obs) {
-						danger = 1;
-						agl_obs = atan((x_hole - x_obs[i_obs]) / (y_hole - y_obs[i_obs]));
-						agl_dock = agl_dock + RAD(2 * (agl_dock - agl_obs) / abs(agl_dock - agl_obs));
-					}
-				}
-				
+			if ((x_obj1 = -1) || (y_obj1 = -1)) {
+				x_obj0 = -1;
+				y_obj0 = -1;
+				x_obj1 = -1;
+				y_obj1 = -1;
 			}
-			if (x_obj0 < 3.25) x_obj0 = 3.25;
-			if (x_obj0 > 7.75) x_obj0 = 7.75;
-			if (y_obj0 < 0.25) y_obj0 = 0.25;
-			if (y_obj0 > 2.75) y_obj0 = 2.75;
-			
+			else {
+				agl_dock = atan((y_hole - y_obj1) / (x_hole - x_obj1));
+				
+				danger = 1;
+				while (danger) {
+					x_obj0 = x_ball[near_ball] - dst_dock * cos(agl_dock);
+					y_obj0 = y_ball[near_ball] - dst_dock * sin(agl_dock);
+					danger = 0;
+					for (i_obs = 0; i_obs < n_obs; i_obs++) {
+						if (calc_dist(x_obj0, x_obs[i_obs], y_obj0, y_obs[i_obs]) < dst_obs) {
+							danger = 1;
+							agl_obs = atan((x_hole - x_obs[i_obs]) / (y_hole - y_obs[i_obs]));
+							agl_dock = agl_dock + RAD(2 * (agl_dock - agl_obs) / abs(agl_dock - agl_obs));
+						}
+					}
+					
+				}
+				if (x_obj0 < 3.25) x_obj0 = 3.25;
+				if (x_obj0 > 7.75) x_obj0 = 7.75;
+				if (y_obj0 < 0.25) y_obj0 = 0.25;
+				if (y_obj0 > 2.75) y_obj0 = 2.75;
+			}
+
 			std::cout << "Path 1 : " << x_abs << ", " << y_abs << " -> " << x_obj0 << ", " << y_obj0 << std::endl;
 			std::cout << "Path 2 : " << x_obj0 << ", " << y_obj0 << " -> " << x_obj1 << ", " << y_obj1 << std::endl;
 			std::cout << "Path 3 : " << x_obj0 << ", " << y_obj1 << " -> " << x_hole - dst_dock << ", " << y_hole << std::endl;
+			
 
 			map_data.at(3) = x_obj0; // x coordinate of docking position
 			map_data.at(4) = y_obj0; // y coordinate of docking position
