@@ -13,14 +13,9 @@ from math import pi
 from math import acos
 from math import cos
 from math import sin
-
-#find length from start to end coordinates
 def find_length(start, end):
   return sqrt((start[0]-end[0])**2+(start[1]-end[1])**2)
 
-#find intersection between the line connecting start and end and the circle centered at obstacle with radius r
-#return intersection points
-#return False if no intersection
 def find_intersection(start,end,obstacle,r):
   #line y = ax + b
   a = (end[1]-start[1])/(end[0]-start[0])
@@ -43,8 +38,7 @@ def find_intersection(start,end,obstacle,r):
 
 
 #set cricital l & r
-#r defines the radius of the danger zone due to pillars
-#calculate whether the intersection segment inside the circle is smaller than l_cr
+#calculate whether the intersection length is within l_cr
 #if yes, return [True, 0] 
 #else, return [False, mid_path]
 def div_path(start, end, obstacle, real_end, mode):
@@ -55,7 +49,6 @@ def div_path(start, end, obstacle, real_end, mode):
   X = obstacle[0]
   Y = obstacle[1]
 
-  #state means whether the start and end points are inside the danger zone circle. 1 means insdie. 0 means outisde.
   state = [0, 0]
   if find_length(start, [X,Y]) < r:  #start is within the circle
     state[0] = 1
@@ -136,16 +129,14 @@ def update_list(path_list, midpoint, i):
   #print(path_list)
   return path_list
 
-#find detoured path for the ostacle
+#find detoured path for one ostacle
 def detour(path_list, obstacle):
   i = len(path_list)-2
   final_destination = path_list[-1]
-  #if the obstacle is the target blue ball, there may be overlapping danger zone. so perform div_path with mode 1
   if len(obstacle_list) > 4 and obstacle == obstacle_list[-1]:
     result = div_path(path_list[i], final_destination, obstacle, final_destination, 1)
   else:
     result = div_path(path_list[i], final_destination, obstacle, final_destination, 0)
-
   if result[0] == True:
     return path_list
   else:
@@ -160,7 +151,7 @@ def detour(path_list, obstacle):
       n = len(path_list)
     return path_list
 
-#calculate the detoured path for all obstacles in the obstacle_list
+
 def get_path_list(obstacle_list, start):
   global path_list
   dist_list = []
@@ -179,7 +170,6 @@ def get_path_list(obstacle_list, start):
   
   return path_list
 
-#callback function to get position and orientation of the robot from daga_integrate node, which calculates it using lidar data
 def update_robot_pos(data):
   data2 = data.data
   theta = -data2[0]*pi/180 + pi
@@ -210,7 +200,7 @@ def update_robot_pos2(data):
   car2 = [data2.position.x, data2.position.y, yaw + pi]
 
 
-#actuate the motors given the orientation and position of the car and desired path
+
 def motor_actuation(path_list, car):
   
   global e_i
@@ -233,23 +223,15 @@ def motor_actuation(path_list, car):
 
   #calculate spd
   e_spd = find_length(path_v, [0,0])
-  speed = e_spd*(spd - min_spd)
-  if speed > (spd - min_spd):
-    speed = (spd - min_spd)
+  spd = e_spd*4.5
+  if spd > 4.5:
+    spd = 4.5
 
   #actuate motor with PID control based on the orientation error
   e_i = e_i + e
   e_d = e - e_old
   result = (e*p_gain + e_i*i_gain + e_d*d_gain)
-  motor_cmd.data = [(min_spd + speed - result), (min_spd + speed + result)]
-  if motor_cmd.data[0] < -spd:
-    motor_cmd.data[0] = -spd
-  if motor_cmd.data[0] > spd:
-    motor_cmd.data[0] = spd
-  if motor_cmd.data[1] < -spd:
-    motor_cmd.data[1] = -spd
-  if motor_cmd.data[1] > spd:
-    motor_cmd.data[1] = spd
+  motor_cmd.data = [(2.5 + spd - result), (2.5 + spd + result)]
   pub.publish(motor_cmd)
   pub1.publish(suspension_cmd)
   pub2.publish(suspension_cmd)
@@ -287,16 +269,11 @@ def motor_actuation_to_goal(path_list, car, speed):
   e_i = e_i + e
   e_d = e - e_old
   result = (e*p_gain + e_i*i_gain + e_d*d_gain)
-  reduced_speed = spd
-  motor_cmd.data = [(speed - result), (speed + result)]
-  if motor_cmd.data[0] < -spd:
-    motor_cmd.data[0] = -spd
-  if motor_cmd.data[0] > spd:
-    motor_cmd.data[0] = spd
-  if motor_cmd.data[1] < -spd:
-    motor_cmd.data[1] = -spd
-  if motor_cmd.data[1] > spd:
-    motor_cmd.data[1] = spd
+  reduced_speed = 6
+  if result > 0:
+    motor_cmd.data = [(speed - result), reduced_speed]
+  else:
+    motor_cmd.data = [reduced_speed, (speed + result)]
   pub.publish(motor_cmd)
   pub1.publish(suspension_cmd)
   pub2.publish(suspension_cmd)
@@ -310,8 +287,6 @@ def motor_actuation_to_goal(path_list, car, speed):
   print('real_car: ', car2)
   print('..')
 
-#align to the target ball position
-#if center camera finds the ball, run align_vision()
 def align(target_ball_pos):
   #rotate correct direction
   e = 10
@@ -331,25 +306,25 @@ def align(target_ball_pos):
       e = e + 2*pi
     while holder_state == 2:
       if e > 0:
-        motor_cmd.data = [spd*5/6, -spd*5/6]
+        motor_cmd.data = [5, -5]
         pub.publish(motor_cmd)
       else:
-        motor_cmd.data = [-spd*5/6, +spd*5/6]
+        motor_cmd.data = [-5, +5]
         pub.publish(motor_cmd)  
     if e > 0:
       if abs(e) > 0.5:
-        motor_cmd.data = [-spd*4/6, +spd*4/6]
+        motor_cmd.data = [-4, +4]
         pub.publish(motor_cmd)
       else:
-        vel = abs(e)*spd*2/6+0.1 
+        vel = abs(e)*2+0.1 
         motor_cmd.data = [-vel, +vel]
         pub.publish(motor_cmd)
     else:
       if abs(e) > 0.5:
-        motor_cmd.data = [+spd*4/6, -spd*4/6]
+        motor_cmd.data = [+4, -4]
         pub.publish(motor_cmd)
       else:
-        vel = abs(e)*spd*2/6+0.1
+        vel = abs(e)*2+0.1
         motor_cmd.data = [+vel, -vel]
         pub.publish(motor_cmd)
     
@@ -372,15 +347,14 @@ def align(target_ball_pos):
     rate.sleep()
   return 1
 
-#more precise alignment done with center camera vision
+#more precise alignment done with camera vision
 def align_vision():
   k = 0
-  kk = 0
-  while abs(vision_alignment_error) > 0.007 and kk < 100:#960px*0.05 ~= 50px
+  while abs(vision_alignment_error) > 0.007 :#960px*0.05 ~= 50px
     if vision_alignment_error == -2:
-      vel = spd/6
+      vel = 1
     else:
-      vel = abs(vision_alignment_error)*spd*2/6 + 0.1
+      vel = abs(vision_alignment_error)*2 + 0.1
     if vision_alignment_error > 0:
       motor_cmd.data = [-vel, +vel]
       pub.publish(motor_cmd)
@@ -401,11 +375,9 @@ def align_vision():
     print('car: ', car)
     print('real_car: ', car2)
     print('..')
-    kk = kk + 1
     rate.sleep()
   return 1
 
-#if safe to move backwards, return 0
 def check_flipping():
   #weak points are the backside of front wheels and caster wheels [x,y,proximity limit in m]
   weak_points = []
@@ -426,10 +398,10 @@ def check_flipping():
         return 1
   return 0
   
+
 #dummy
 motor_cmd = Float64MultiArray()
 suspension_cmd = Float64()
-no_ball = Int64
 car = [0, 0, 0]
 car2 = [0,0,0]
 target = [5,1.5]
@@ -438,7 +410,7 @@ region = -1
 holder_state = -1
 vision_alignment_error = -2
 align_result = 1
-scan_path = [[7.5,0.7], [3.5,2.3], [7.5,2.3], [3.5, 0.7]]
+
 #fixed parameters
 obstacle_list = [[4,1.5], [5.5,0.7], [5.5,2.3], [7,1.5]]
 
@@ -448,7 +420,6 @@ suspension_topic_front_left = '/toy_car2/front_left_suspension_controller/comman
 suspension_topic_front_right = '/toy_car2/front_right_suspension_controller/command'
 suspension_topic_rear_left = '/toy_car2/rear_left_suspension_controller/command'
 suspension_topic_rear_right = '/toy_car2/rear_right_suspension_controller/command'
-no_ball_topic_name = '/no_ball'
 
 #temporary update functions
 def update_region(data):
@@ -469,7 +440,6 @@ pub1 = rospy.Publisher(suspension_topic_front_left, Float64, queue_size=10)
 pub2 = rospy.Publisher(suspension_topic_front_right, Float64, queue_size=10)
 pub3 = rospy.Publisher(suspension_topic_rear_left, Float64, queue_size=10)
 pub4 = rospy.Publisher(suspension_topic_rear_right, Float64, queue_size=10)
-pub_no_ball = rospy.Publisher(no_ball_topic_name, Int64, queue_size=10)
 rospy.Subscriber("/gazebo/model_states", ModelStates, update_robot_pos2)
 rospy.Subscriber("/mapdata/stage_position", Float64MultiArray, update_robot_pos)
 
@@ -489,50 +459,38 @@ pub2.publish(suspension_cmd)
 pub3.publish(suspension_cmd)
 pub4.publish(suspension_cmd)
 
-no_ball.data = 0
-pub_no_ball.publish(no_ball)
-
 #rate control
 rate = rospy.Rate(20)
 
 #parameters to adjust
-spd = 6 #max forward speed
-back_spd = 2 #speed when moving backwards
-min_spd = 2.5 #min speed forward
-[p_gain, i_gain, d_gain] = [7, 0, 0.01] #pid gains for motor actuation
+spd = 6
+[p_gain, i_gain, d_gain] = [7, 0, 0.01]
 close_enough = 0.045
-goal = [8,1.5] #goal hole coordinate
-goal_region = 0.3 #size of goal region
-l1 = 0.24036657 #2D distance from origin to back side of front wheel
-l2 = 0.30616743 #2D distance from origin to caster wheel
-stuck_back_time = 50/back_spd #number of loops for moving backwards if stuck
-docking_time = 180/spd*2 #number of loops for going forward for docking
+goal = [8,1.5]
+goal_region = 0.3
+l1 = 0.24036657
+l2 = 0.30616743
 
 e_old = 0
 e_i = 0
 stuck_list = []
 while not rospy.is_shutdown():
-  no_ball.data = 0
-  pub_no_ball.publish(no_ball)
-
   print("region: ", region)
   print("holder_state: ", holder_state)
-  print("target: ", target)
   kk = -1
   start = [car[0], car[1]]
-
-  #if stuck for 52 loops, move backwards
+  #if stuck, move backwards
   stuck_list.append(start)
   if len(stuck_list) > 51:
     print("stucked? (if < 0.1) ", find_length(stuck_list[0], stuck_list[50]))
     k = 0
     if find_length(stuck_list[0], stuck_list[50]) < 0.1:
-      while k < stuck_back_time:
+      while k < 25:
         print("stucked..")
         flip = check_flipping()
         if flip == 0:
           print("moving backwards")
-          motor_cmd.data = [-back_spd,-back_spd]
+          motor_cmd.data = [-2,-2]
         else: # possibility of flipping
           print("FLIP WARNNING: shouldn't move backwards!")
           motor_cmd.data = [0,0]
@@ -551,76 +509,56 @@ while not rospy.is_shutdown():
 
   k = 0
   if holder_state != 1:
-    if target[0] < 0:
-      print("scanning")
-      print("scan_path: ", scan_path)
-      scan_path.insert(0, [car[0], car[1]])
-      path_list = [scan_path[0], scan_path[1]]
-      path_list = get_path_list(obstacle_list, scan_path[0])
-      motor_actuation(path_list, car)
-      scan_path.pop(0)
-      if find_length(scan_path[0], car) < close_enough:
-        scan_path.pop(0)
-    else:
-      scan_path = [[7.5,0.7], [3.5,2.3], [7.5,2.3], [3.5, 0.7]]
-      obstacle_list.append(target)
-      end = docking
+    obstacle_list.append(target)
+    end = docking
 
-      # after goal in
-      while find_length(start, goal) < goal_region: 
-        while k < 5:
-          motor_cmd.data = [0,0] #first stop so that doesn't flip forward
-          pub.publish(motor_cmd)
-          k = k + 1
-          rate.sleep()
-        start = [car[0], car[1]]
-        motor_cmd.data = [-back_spd,-back_spd] #to avoid wheel to fall in the hole, move backwards
+    # after goal in
+    while find_length(start, goal) < goal_region: 
+      while k < 5:
+        motor_cmd.data = [0,0] #first stop so that doesn't flip forward
+        pub.publish(motor_cmd)
+        k = k + 1
+        rate.sleep()
+      start = [car[0], car[1]]
+      motor_cmd.data = [-2,-2] #to avoid wheel to fall in the hole, move backwards
+      pub1.publish(suspension_cmd)
+      pub2.publish(suspension_cmd)
+      pub3.publish(suspension_cmd)
+      pub4.publish(suspension_cmd)
+      pub.publish(motor_cmd)
+      rate.sleep()
+
+    #approaching the docking point
+    if find_length(start, end) > close_enough: 
+      print("Approaching docking point: ", docking)
+      path_list = [start, end]
+      path_list = get_path_list(obstacle_list, start)
+      motor_actuation(path_list, car)
+
+    else: #approached the proper docking point
+      print("At docking point")
+      align_result = align(target) #align with the blue ball
+      motor_cmd.data = [0,0]
+      pub.publish(motor_cmd)
+      k = 0
+      while holder_state!= 1 and k < 60 and align_result == 0:
+        print("going for the blue ball")
+        print("holder_state: ", holder_state)
+        print("stuck if > 50: ", k)
+        motor_cmd.data = [3,3]
         pub1.publish(suspension_cmd)
         pub2.publish(suspension_cmd)
         pub3.publish(suspension_cmd)
         pub4.publish(suspension_cmd)
         pub.publish(motor_cmd)
+        k = k + 1
+        print("...")
         rate.sleep()
+      if k < 59:
+        kk = 10
 
-      #approaching the docking point
-      if find_length(start, end) > close_enough: 
-        print("Approaching docking point: ", docking)
-        path_list = [start, end]
-        path_list = get_path_list(obstacle_list, start)
-        motor_actuation(path_list, car)
+    obstacle_list.pop()
 
-      else: #approached the proper docking point
-        print("At docking point")
-        align_result = align(target) #align with the blue ball
-        motor_cmd.data = [0,0]
-        pub.publish(motor_cmd)
-        k = 0
-        while holder_state!= 1 and k < docking_time and align_result == 0:
-          print("going for the blue ball")
-          print("holder_state: ", holder_state)
-          print("stuck if > 60: ", k)
-          motor_cmd.data = [spd/2,spd/2]
-          pub1.publish(suspension_cmd)
-          pub2.publish(suspension_cmd)
-          pub3.publish(suspension_cmd)
-          pub4.publish(suspension_cmd)
-          pub.publish(motor_cmd)
-          k = k + 1
-          print("...")
-          rate.sleep()
-        
-        if align_result == 1:
-          no_ball.data = 1
-          pub_no_ball.publish(no_ball)
-          rate.sleep()
-          rate.sleep()
-          rate.sleep()
-        if k < docking_time-1:
-          kk = 10
-
-      obstacle_list.pop()
-
-  #when blue ball inside the holder after docking
   while holder_state == 1 or kk > 0:
     print("Going to Goal region")
     print("holder_state: ", holder_state)
@@ -629,7 +567,7 @@ while not rospy.is_shutdown():
     if find_length(start, end) > 0.07: #approaching the goal area
       path_list = [start, end]
       path_list = get_path_list(obstacle_list, start)
-      motor_actuation_to_goal(path_list, car, spd) # no speed reduction
+      motor_actuation_to_goal(path_list, car, 7) # no speed reduction
     if holder_state != 1:
       kk = kk - 1
       print("kk: ",kk)
