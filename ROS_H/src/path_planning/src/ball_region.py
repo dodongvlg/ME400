@@ -269,7 +269,11 @@ def motor_actuation_to_goal(path_list, car, speed):
   e_i = e_i + e
   e_d = e - e_old
   result = (e*p_gain + e_i*i_gain + e_d*d_gain)
-  motor_cmd.data = [(speed - result), (speed + result)]
+  reduced_speed = 6
+  if result > 0:
+    motor_cmd.data = [(speed - result), reduced_speed]
+  else:
+    motor_cmd.data = [reduced_speed, (speed + result)]
   pub.publish(motor_cmd)
   pub1.publish(suspension_cmd)
   pub2.publish(suspension_cmd)
@@ -374,6 +378,26 @@ def align_vision():
     rate.sleep()
   return 1
 
+def check_flipping():
+  #weak points are the backside of front wheels and caster wheels [x,y,proximity limit in m]
+  weak_points = []
+  weak_points.append([car[0] + l1*cos(car[2]+pi-1.797429905695436), car[1] + l1*sin(car[2]+pi-1.797429905695436), 0.02])
+  weak_points.append([car[0] + l1*cos(car[2]+pi+1.797429905695436), car[1] + l1*sin(car[2]+pi+1.797429905695436), 0.02])
+  weak_points.append([car[0] + l2*cos(car[2]+pi-2.800216520092484), car[1] + l2*sin(car[2]+pi-2.800216520092484), 0.1])
+  weak_points.append([car[0] + l2*cos(car[2]+pi+2.800216520092484), car[1] + l2*sin(car[2]+pi+2.800216520092484), 0.1])
+  print(".....")
+  print(weak_points)
+
+  for obstacle in obstacle_list:
+    for weak_point in weak_points:
+      if find_length(weak_point, obstacle) < 0.07 + weak_point[2]:
+        print("too close to a pillar")
+        return 1
+      if weak_point[0] < 3+weak_point[2] or weak_point[0] > 8-weak_point[2] or weak_point[1] < weak_point[2] or weak_point[1] > 3-weak_point[2]:
+        print("too close to a wall")
+        return 1
+  return 0
+  
 
 #dummy
 motor_cmd = Float64MultiArray()
@@ -439,11 +463,13 @@ pub4.publish(suspension_cmd)
 rate = rospy.Rate(20)
 
 #parameters to adjust
-spd = 7
+spd = 6
 [p_gain, i_gain, d_gain] = [7, 0, 0.01]
 close_enough = 0.045
 goal = [8,1.5]
 goal_region = 0.3
+l1 = 0.24036657
+l2 = 0.30616743
 
 e_old = 0
 e_i = 0
@@ -459,16 +485,15 @@ while not rospy.is_shutdown():
     print("stucked? (if < 0.1) ", find_length(stuck_list[0], stuck_list[50]))
     k = 0
     if find_length(stuck_list[0], stuck_list[50]) < 0.1:
-      while k < 15:
+      while k < 25:
         print("stucked..")
-        '''
-        if find_length(start, obstacle_list[0]) < 0.03 or find_length(start, obstacle_list[1]) < 0.03 or find_length(start, obstacle_list[2]) < 0.03 or find_length(start, obstacle_list[3]) < 0.03 or start[0] < 3.03 or start[0] > 7.97 or start[1] > 0.03 or start[1] > 2.97:
-          print("pillar or wall too close! rotating")
-          motor_cmd.data = [3,-3]
-          pub.publish(motor_cmd)          
-        '''
-        print("moving backwards")
-        motor_cmd.data = [-2,-2]
+        flip = check_flipping()
+        if flip == 0:
+          print("moving backwards")
+          motor_cmd.data = [-2,-2]
+        else: # possibility of flipping
+          print("FLIP WARNNING: shouldn't move backwards!")
+          motor_cmd.data = [0,0]
         pub.publish(motor_cmd)
         pub1.publish(suspension_cmd)
         pub2.publish(suspension_cmd)
