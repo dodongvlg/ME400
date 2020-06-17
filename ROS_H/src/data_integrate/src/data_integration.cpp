@@ -1,8 +1,8 @@
 /*
 Data Integration Node
 KAIST ME400 Team H
-Last modified by Gunwoo Park, 2020. 06. 12.
-Version 5 : Setting docking position considering obstacles
+Last modified by Gunwoo Park, 2020. 06. 17.
+Version 7 : Setting docking position considering walls / Get flags from OpenCV
 This code is composed with init, loop, and two callback parts.
 Init : Executes once if the node starts to run.
 Loop : Executes periodically during the node runtime.
@@ -70,6 +70,8 @@ float y_ball[6];
 ///// TO DO /////
 int ballpos_map[500][300];
 float ballpos_temp[10];
+
+int region_flag = 0;
 
 // Matrix rotation
 // Input : 2x2 matrix to rotate
@@ -225,6 +227,12 @@ void ballpos_Callback(const std_msgs::Float64MultiArray::ConstPtr& ballpos) {
 	map_mutex.unlock();
 }
 
+void flag_Callback(const std_msgs::Float64::ConstPtr& flag) {
+	map_mutex.lock();
+	region_flag = flag->data;
+	map_mutex.unlock();
+}
+
 
 // MAIN FUNCTION
 int main(int argc, char **argv)
@@ -269,6 +277,7 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 	ros::Subscriber sub_ballpos = n.subscribe<std_msgs::Float64MultiArray>("/ball_position", 256, ballpos_Callback); ///// TO DO /////
+	ros::Subscriber sub_flag = n.subscribe<std_msgs::Float64>("/regionFlag", 256, flag_Callback); ///// TO DO /////
 
 
 	ros::Publisher pub_mode = n.advertise<std_msgs::Float64>("/mapdata/mode", 16);
@@ -312,14 +321,14 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if (ent_cnt > ent_thresh) mode = STAGE; // Mode transition
+		if (ent_cnt > ent_thresh || region_flag) mode = STAGE; // Mode transition
 		std::cout << std::endl;
 		std::cout << "Current mode : " << mode << " open " << ent_cnt << std::endl;
 
 		mode_msg.data = mode;
 		pub_mode.publish(mode_msg);		
 
-		mode = 1; // TO DO --- ADDED FOR DEBUGGING //
+		// mode = 1;  TO DO --- ADDED FOR DEBUGGING //
 		// Loop 1 : Branched navigation
 		if (mode) {
 
@@ -424,7 +433,7 @@ int main(int argc, char **argv)
 			std::cout << "Position : " << map_data.at(1) << ", " << map_data.at(2) << "  Orientation : " << map_data.at(0) << std::endl;
 
 			// Loop A - 2 : Position objects on the map, to be implemented
-			// TO DO //
+			// TODO //
 			std::cout << "Entered loop2" << std::endl;;
 			
 			float theta_temp[5];
@@ -521,7 +530,7 @@ int main(int argc, char **argv)
 				}
 
 			}
-			// TO DO ENDS //
+			// TODO ENDS //
 
 
 			// Loop A - 3 : Find optimal global & local path
@@ -554,6 +563,10 @@ int main(int argc, char **argv)
 				}
 				
 			}
+			if (x_obj0 < 3.25) x_obj0 = 3.25;
+			if (x_obj0 > 7.75) x_obj0 = 7.75;
+			if (y_obj0 < 0.25) y_obj0 = 0.25;
+			if (y_obj0 > 2.75) y_obj0 = 2.75;
 			
 			std::cout << "Path 1 : " << x_abs << ", " << y_abs << " -> " << x_obj0 << ", " << y_obj0 << std::endl;
 			std::cout << "Path 2 : " << x_obj0 << ", " << y_obj0 << " -> " << x_obj1 << ", " << y_obj1 << std::endl;
