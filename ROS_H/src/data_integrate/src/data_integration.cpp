@@ -193,23 +193,23 @@ void camera_Callback(const core_msgs::ball_position::ConstPtr& position) {
 }
 
 // Callback 3 : Get ball position from Gazebo (To be replaced to OpenCV)
-void model_Callback(const gazebo_msgs::ModelStates::ConstPtr& model) {
-	map_mutex.lock();
-	int i_ball;
-	int n_ball = 6;
-	// Modified to ignore balls in the hole.
-	for (i_ball = 0; i_ball < n_ball; i_ball++) {
-		if (model->pose[i_ball + 6].position.z > 0.3) {
-			x_ball[i_ball] = model->pose[i_ball + 6].position.x;
-			y_ball[i_ball] = model->pose[i_ball + 6].position.y;
-		}
-		else {
-			x_ball[i_ball] = -8;
-			y_ball[i_ball] = -3;
-		}
-	}
-	map_mutex.unlock();
-}
+// void model_Callback(const gazebo_msgs::ModelStates::ConstPtr& model) {
+// 	map_mutex.lock();
+// 	int i_ball;
+// 	int n_ball = 6;
+// 	// Modified to ignore balls in the hole.
+// 	for (i_ball = 0; i_ball < n_ball; i_ball++) {
+// 		if (model->pose[i_ball + 6].position.z > 0.3) {
+// 			x_ball[i_ball] = model->pose[i_ball + 6].position.x;
+// 			y_ball[i_ball] = model->pose[i_ball + 6].position.y;
+// 		}
+// 		else {
+// 			x_ball[i_ball] = -8;
+// 			y_ball[i_ball] = -3;
+// 		}
+// 	}
+// 	map_mutex.unlock();
+// }
 
 // Callback 4 : Callback for ball coordinate management
 ///// TO DO ////
@@ -267,8 +267,8 @@ int main(int argc, char **argv)
 
 	// Local Constants for loop 3
 	int m_ball = 0; // TO DO
-	int n_ball = 3; // TO DO
-	int n_obs = 6;
+	int n_ball = 1; // TO DO
+	int n_obs = 1; // TO DO
 	float x_hole = 8;
 	float y_hole = 1.5;
 	float dst_dock = 0.4;
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
 	ros::Rate loop_rate(5); // Modify this value to change loop rate for ~Hz.
 	ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
-	ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
+	// ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 	ros::Subscriber sub_ballpos = n.subscribe<std_msgs::Float64MultiArray>("/ball_position", 256, ballpos_Callback); ///// TO DO /////
 	ros::Subscriber sub_flag = n.subscribe<std_msgs::Float64>("/regionFlag", 256, flag_Callback); ///// TO DO /////
 	ros::Subscriber sub_noball = n.subscribe<std_msgs::Float64>("/no_ball", 256, noball_Callback); ///// TO DO /////
@@ -442,8 +442,12 @@ int main(int argc, char **argv)
 
 			// Loop A - 2 : Position objects on the map, to be implemented
 			// TODO //
-			std::cout << "Entered loop2" << std::endl;;
+			// std::cout << "Entered loop2" << std::endl;;
 			
+			x_abs = 4;
+			y_abs = 1.5;
+			theta = 0;
+
 			float theta_temp[5];
 			float dist_temp;
 			float ballx_temp, bally_temp;
@@ -485,6 +489,8 @@ int main(int argc, char **argv)
 						// std::cout << "bally :" << bally << std::endl;
 						if ((ballx >= 300) && (ballx < 800) && (bally >= 0) && (bally < 300)) { 
 							ballpos_map[ballx - 300][bally] += 1;
+							// std::cout << "ballx :" << ballx << std::endl;
+							// std::cout << "bally :" << bally << std::endl;
 						}
 					}
 				}
@@ -588,12 +594,19 @@ int main(int argc, char **argv)
 						top[0] = ballpos_map[findx][findy];
 						top[1] = findx;
 						top[2] = findy;
+						// std::cout << "topx : " << top[1] << std::endl;
+						// std::cout << "topy : " << top[2] << std::endl;
 					}
 				}
 			}
 
-			x_ball[0] = ((float) top[1]) / 100 + 3;
-			y_ball[0] = ((float) top[2]) / 100;
+			if (top[0] != -1) {
+				x_ball[0] = ((float) top[1]) / 100 + 3;
+				y_ball[0] = ((float) top[2]) / 100;
+			}
+
+			// std::cout << "x_ball : " << x_ball[0] << std::endl;
+			// std::cout << "y_ball : " << y_ball[0] << std::endl;
 			
 			// TO DO ENDS //
 
@@ -614,13 +627,20 @@ int main(int argc, char **argv)
 			x_obj1 = x_ball[near_ball];
 			y_obj1 = y_ball[near_ball];
 
-			if ((x_obj1 = -1) || (y_obj1 = -1)) {
+			// std::cout << "xobj0 : " << x_obj0 << std::endl;
+			// std::cout << "yobj0 : " << y_obj0 << std::endl;
+			// std::cout << "xobj1 : " << x_obj1 << std::endl;
+			// std::cout << "yobj1 : " << y_obj1 << std::endl;
+
+			if ((x_obj1 == (float) -1) || (y_obj1 == (float) -1)) {
+				// std::cout << "case -1" << std::endl;
 				x_obj0 = -1;
 				y_obj0 = -1;
 				x_obj1 = -1;
 				y_obj1 = -1;
 			}
 			else {
+				// std::cout << "not case -1" << std::endl;
 				agl_dock = atan((y_hole - y_obj1) / (x_hole - x_obj1));
 				
 				danger = 1;
@@ -637,6 +657,12 @@ int main(int argc, char **argv)
 					}
 					
 				}
+				// std::cout << "xobj0 : " << x_obj0 << std::endl;
+				// std::cout << "yobj0 : " << y_obj0 << std::endl;
+				// std::cout << "xobj1 : " << x_obj1 << std::endl;
+				// std::cout << "yobj1 : " << y_obj1 << std::endl;
+
+
 				if (x_obj0 < 3.25) x_obj0 = 3.25;
 				if (x_obj0 > 7.75) x_obj0 = 7.75;
 				if (y_obj0 < 0.25) y_obj0 = 0.25;
