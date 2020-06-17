@@ -376,7 +376,7 @@ def align(target_ball_pos):
 def align_vision():
   k = 0
   kk = 0
-  while abs(vision_alignment_error) > 0.007 and kk < 100:#960px*0.05 ~= 50px
+  while abs(vision_alignment_error) > 0.01 and kk < 100:#960px*0.05 ~= 50px
     if vision_alignment_error == -2:
       vel = spd/6
     else:
@@ -499,7 +499,7 @@ rate = rospy.Rate(20)
 spd = 6 #max forward speed
 back_spd = 2 #speed when moving backwards
 min_spd = 2.5 #min speed forward
-[p_gain, i_gain, d_gain] = [7, 0, 0.01] #pid gains for motor actuation
+[p_gain, i_gain, d_gain] = [6, 0, 0.01] #pid gains for motor actuation
 close_enough = 0.045
 goal = [8,1.5] #goal hole coordinate
 goal_region = 0.3 #size of goal region
@@ -556,6 +556,8 @@ while not rospy.is_shutdown():
       stuck_list.pop(0)
 
   k = 0
+  start = [car[0], car[1]]
+
   if holder_state != 1:
     if target[0] < 0:
       print("scanning")
