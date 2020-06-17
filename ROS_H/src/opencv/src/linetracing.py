@@ -300,7 +300,7 @@ if __name__ == '__main__':
     xcDocing_pub = rospy.Publisher("/docking/centroid",Float64, queue_size = 10)
     ##################################################################################
     
-    rospy.init_node("OpenCV_Node")
+    rospy.init_node("OpenCV_Node2")
 
     rate = rospy.Rate(20)
 
