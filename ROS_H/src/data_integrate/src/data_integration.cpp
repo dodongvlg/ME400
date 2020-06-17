@@ -654,7 +654,11 @@ int main(int argc, char **argv)
 				}
 			}
 
-			if (top[0] != -1) {
+			if (top[0] == -1) {
+				x_ball[0] = -1;
+				y_ball[0] = -1;
+			}
+			else {
 				x_ball[0] = ((float) top[1]) / 100 + 3;
 				y_ball[0] = ((float) top[2]) / 100;
 			}
