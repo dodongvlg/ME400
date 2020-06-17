@@ -18,20 +18,20 @@ toy_car2:
   front_left_suspension_controller:
     type: effort_controllers/JointPositionController
     joint: front_left_suspension_joint
-    pid: {p: 600, i: 0.0000, d: 200}
+    pid: {p: 500, i: 0.0000, d: 62.19}
 
   front_right_suspension_controller:
     type: effort_controllers/JointPositionController
     joint: front_right_suspension_joint
-    pid: {p: 600, i: 0.0000, d: 200}
+    pid: {p: 500, i: 0.0000, d: 62.19}
 
   rear_left_suspension_controller:
     type: effort_controllers/JointPositionController
     joint: rear_left_suspension_joint
-    pid: {p: 70, i: 0.0000, d: 45}
+    pid: {p: 59.78, i: 0.0000, d: 7.937}
 
   rear_right_suspension_controller:
     type: effort_controllers/JointPositionController
     joint: rear_right_suspension_joint
-    pid: {p: 70, i: 0.0000, d: 45}
+    pid: {p: 59.78, i: 0.0000, d: 7.937}
 

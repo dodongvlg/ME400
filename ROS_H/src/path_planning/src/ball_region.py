@@ -380,7 +380,7 @@ def align_vision():
     if vision_alignment_error == -2:
       vel = spd/6
     else:
-      vel = abs(vision_alignment_error)*spd*2/6 + 0.1
+      vel = abs(vision_alignment_error)*spd*2/6
     if vision_alignment_error > 0:
       motor_cmd.data = [-vel, +vel]
       pub.publish(motor_cmd)
@@ -413,6 +413,7 @@ def check_flipping():
   weak_points.append([car[0] + l1*cos(car[2]+pi+1.797429905695436), car[1] + l1*sin(car[2]+pi+1.797429905695436), 0.02])
   weak_points.append([car[0] + l2*cos(car[2]+pi-2.800216520092484), car[1] + l2*sin(car[2]+pi-2.800216520092484), 0.1])
   weak_points.append([car[0] + l2*cos(car[2]+pi+2.800216520092484), car[1] + l2*sin(car[2]+pi+2.800216520092484), 0.1])
+  weak_points.append([car[0] + l3*cos(car[2]+pi+pi), car[1] + l3*sin(car[2]+pi+pi), 0.1])
   print(".....")
   print(weak_points)
 
@@ -505,6 +506,7 @@ goal = [8,1.5] #goal hole coordinate
 goal_region = 0.3 #size of goal region
 l1 = 0.24036657 #2D distance from origin to back side of front wheel
 l2 = 0.30616743 #2D distance from origin to caster wheel
+l3 = 0.2885
 stuck_back_time = 70/back_spd #number of loops for moving backwards if stuck
 docking_time = 180/spd*2 #number of loops for going forward for docking
 
