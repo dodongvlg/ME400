@@ -10,10 +10,10 @@ from cv_bridge import CvBridge, CvBridgeError
 bridge = CvBridge()
 
 cam_distance = 0.25 # 250mm
-f_mm = 3.67 / 1000
-sensor_width = 4.8 / 1000
-pixel_width = 1920
-f_pixel = f_mm * pixel_width / sensor_width
+# f_mm = 3.67 / 1000
+# sensor_width = 4.8 / 1000
+# pixel_width = 1920
+# f_pixel = f_mm * pixel_width / sensor_width
 disparity = 0
 img_left = 0
 img_right = 0
@@ -55,7 +55,6 @@ def getHoughCircles(frame, l):
         return np.array([], dtype=np.float32)
 
 def drawCircles(frame,circlesList,textList=[]) :
-    
     font = cv2.FONT_HERSHEY_SIMPLEX ;fontScale = 0.5 ;color = (255, 255, 255) ;thickness = 1
     highlight=frame.copy()
 
@@ -76,7 +75,6 @@ def left_circle_callback(data):
     # print("left", left_blue_ball)
     # cv2.imshow('blue',drawCircles(img_left,[left_blue_ball],["Blue ball"]))
     # cv2.waitKey(0)
-    
     # left_blue_ball = getHoughCircles(getHSV(img_left, b), bC)
     
 def right_circle_callback(data):
@@ -87,8 +85,6 @@ def right_circle_callback(data):
     # cv2.imshow('blue',drawCircles(img_right,[right_blue_ball],["Blue ball"]))
     # cv2.waitKey(0)
     # print("right", right_blue_ball)
-    # img_right = bridge.imgmsg_to_cv2(data, "bgr8")
-    # right_blue_ball = getHoughCircles(getHSV(img_right, b), bC)
 
 if __name__ == '__main__':
     global left_blue_ball
@@ -96,11 +92,8 @@ if __name__ == '__main__':
 
     left_blue_ball = np.array([], dtype=np.float32)
     right_blue_ball = np.array([], dtype=np.float32)
-    x_const = 0.88 # Consts for calibration
-    y_const = 0.88
 
-
-    dist_pub = rospy.Publisher("/ball_distance", Float64MultiArray, queue_size = 10)
+    dist_pub = rospy.Publisher("/ball_position", Float64MultiArray, queue_size = 10)
     rospy.Subscriber("/camera_left/rgb/image_raw", Image, left_circle_callback)
     rospy.Subscriber("/camera_right/rgb/image_raw", Image, right_circle_callback)
 
@@ -117,16 +110,17 @@ if __name__ == '__main__':
         else:
             for c1 in left_blue_ball[0, :]:
                 for c2 in right_blue_ball[0, :]:
-                    if ((c2[0] - 30 < c1[0]) or (c1[0] < c2[0] + 30)):
-                        if ((c2[1] - 5 < c1[1]) or (c1[1] < c2[1] + 5)):
-                            x_dist = cam_distance * f_pixel / abs(c1[0] - c2[0]) * x_const
-                            y_dist = - (x_dist * ((960 - c1[0]) + (960 - c2[0]))) / (2 * f_pixel) * y_const
-                            distance.append(x_dist)
-                            distance.append(y_dist)
-        
+                    if (abs(c2[0] - c1[0]) > 100):
+                        if ((0.95 * c2[1] < c1[1]) and (c1[1] < 1.05 * c2[1])):
+                            if ((0.9 * c2[2] < c1[2]) and (c1[2] < 1.1 * c2[2])):
+                                x_dist = cam_distance * 1268 / abs(c1[0] - c2[0])
+                                y_dist = x_dist * (1920 - (c1[0] + c2[0])) / (2 * 1268)
+                                distance.append(x_dist)
+                                distance.append(y_dist)
+
             if (not distance):
                 distance.append(-1.0)
-        # print(distance)
+        print(distance)
         pub_distance.data = distance
         dist_pub.publish(pub_distance) ############# Publish blue ball distance from now
         print("publishing")
