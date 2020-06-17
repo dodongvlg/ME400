@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 	// Local Constants for loop 3
 	int m_ball = 0; // TO DO
 	int n_ball = 1; // TO DO
-	int n_obs = 1; // TO DO
+	int n_obs = 4; // TO DO
 	float x_hole = 8;
 	float y_hole = 1.5;
 	float dst_dock = 0.4;
@@ -444,10 +444,6 @@ int main(int argc, char **argv)
 			// TODO //
 			// std::cout << "Entered loop2" << std::endl;;
 			
-			x_abs = 4;
-			y_abs = 1.5;
-			theta = 0;
-
 			float theta_temp[5];
 			float dist_temp;
 			float ballx_temp, bally_temp;
@@ -479,18 +475,28 @@ int main(int argc, char **argv)
 						ballx_temp = ballpos_temp[2 * a2_cnt];
 						bally_temp = ballpos_temp[2 * a2_cnt + 1];
 						dist_temp = sqrt(ballx_temp * ballx_temp + bally_temp * bally_temp);
+						// std::cout << "ballx_temp relative :" << ballx_temp << std::endl;
+						// std::cout << "bally_temp relative :" << bally_temp << std::endl;
+						// std::cout << "theta relative :" << theta_temp[a2_cnt] << std::endl;
+						// std::cout << "dist_temp :" << dist_temp << std::endl;
+						// std::cout << "theta as radian : " << theta_rad << std::endl;
+						// std:: cout << "theta sum : " << theta_rad + theta_temp[a2_cnt] << std::endl;
 						ballx_temp = x_abs + dist_temp * cos(theta_temp[a2_cnt] + theta_rad);
 						bally_temp = y_abs + dist_temp * sin(theta_temp[a2_cnt] + theta_rad);
+						// std::cout << "ballx_temp absolute :" << ballx_temp << std::endl;
+						// std::cout << "bally_temp absolute :" << bally_temp << std::endl;
 						ballx_temp = round(100 * ballx_temp);
 						bally_temp = round(100 * bally_temp);
 						ballx = (int) ballx_temp;
 						bally = (int) bally_temp;
 						// std::cout << "ballx :" << ballx << std::endl;
 						// std::cout << "bally :" << bally << std::endl;
+						// std::cout << "theta :" << theta_temp << std::endl;
 						if ((ballx >= 300) && (ballx < 800) && (bally >= 0) && (bally < 300)) { 
 							ballpos_map[ballx - 300][bally] += 1;
 							// std::cout << "ballx :" << ballx << std::endl;
 							// std::cout << "bally :" << bally << std::endl;
+							// std::cout << "theta :" << theta_temp << std::endl;
 						}
 					}
 				}
@@ -569,12 +575,15 @@ int main(int argc, char **argv)
 			int old_ballx, old_bally;
 
 			if (noball_flag = 1) {
+				std::cout << "noball flag" << std::endl;
+				std::cout << "noball flag" << std::endl;
 				if ((map_data.at(5) > 3) && (map_data.at(6) > 0)) {
+					std::cout << "erasing" << std::endl;
 					old_ballx = (int) round(100 * map_data.at(5));
 					old_bally = (int) round(100 * map_data.at(6));
 					for (cx1 = -7; cx1 < 8; cx1++) {
 						for (cx2 = -7; cx2 < 8; cx2++) {
-							ballpos_map[old_ballx - 300 - cx1][old_bally - cx2] = 0;
+							ballpos_map[old_ballx - 300 + cx1][old_bally + cx2] = 0;
 						}
 					}
 				} 
@@ -591,11 +600,10 @@ int main(int argc, char **argv)
 			for (findx = 0; findx < 500; findx++) {
 				for (findy = 0; findy < 300; findy++) {
 					if ((ballpos_map[findx][findy] != 0) && (ballpos_map[findx][findy] > top[0])) {
+						std::cout << "top fixed" << std::endl;
 						top[0] = ballpos_map[findx][findy];
 						top[1] = findx;
 						top[2] = findy;
-						// std::cout << "topx : " << top[1] << std::endl;
-						// std::cout << "topy : " << top[2] << std::endl;
 					}
 				}
 			}
@@ -605,8 +613,8 @@ int main(int argc, char **argv)
 				y_ball[0] = ((float) top[2]) / 100;
 			}
 
-			// std::cout << "x_ball : " << x_ball[0] << std::endl;
-			// std::cout << "y_ball : " << y_ball[0] << std::endl;
+			std::cout << "x_ball : " << x_ball[0] << std::endl;
+			std::cout << "y_ball : " << y_ball[0] << std::endl;
 			
 			// TO DO ENDS //
 
