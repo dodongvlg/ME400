@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     rospy.init_node("OpenCV_Node")
 
-    rate = rospy.Rate(5)
+    rate = rospy.Rate(20)
 
     while not rospy.is_shutdown():
         distance = []
