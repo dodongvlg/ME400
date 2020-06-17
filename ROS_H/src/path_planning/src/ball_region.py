@@ -338,7 +338,7 @@ def align(target_ball_pos):
         pub.publish(motor_cmd)  
     if e > 0:
       if abs(e) > 0.5:
-        motor_cmd.data = [-spd*4/6, +spd*4/6]
+        motor_cmd.data = [-spd*3/6, +spd*3/6]
         pub.publish(motor_cmd)
       else:
         vel = abs(e)*spd*2/6+0.1 
@@ -346,7 +346,7 @@ def align(target_ball_pos):
         pub.publish(motor_cmd)
     else:
       if abs(e) > 0.5:
-        motor_cmd.data = [+spd*4/6, -spd*4/6]
+        motor_cmd.data = [+spd*3/6, -spd*3/6]
         pub.publish(motor_cmd)
       else:
         vel = abs(e)*spd*2/6+0.1
@@ -429,7 +429,7 @@ def check_flipping():
 #dummy
 motor_cmd = Float64MultiArray()
 suspension_cmd = Float64()
-no_ball = Int64
+#no_ball = Int64()
 car = [0, 0, 0]
 car2 = [0,0,0]
 target = [5,1.5]
@@ -448,7 +448,7 @@ suspension_topic_front_left = '/toy_car2/front_left_suspension_controller/comman
 suspension_topic_front_right = '/toy_car2/front_right_suspension_controller/command'
 suspension_topic_rear_left = '/toy_car2/rear_left_suspension_controller/command'
 suspension_topic_rear_right = '/toy_car2/rear_right_suspension_controller/command'
-no_ball_topic_name = '/no_ball'
+#no_ball_topic_name = '/no_ball'
 
 #temporary update functions
 def update_region(data):
@@ -469,7 +469,7 @@ pub1 = rospy.Publisher(suspension_topic_front_left, Float64, queue_size=10)
 pub2 = rospy.Publisher(suspension_topic_front_right, Float64, queue_size=10)
 pub3 = rospy.Publisher(suspension_topic_rear_left, Float64, queue_size=10)
 pub4 = rospy.Publisher(suspension_topic_rear_right, Float64, queue_size=10)
-pub_no_ball = rospy.Publisher(no_ball_topic_name, Int64, queue_size=10)
+#pub_no_ball = rospy.Publisher(no_ball_topic_name, Int64, queue_size=10)
 rospy.Subscriber("/gazebo/model_states", ModelStates, update_robot_pos2)
 rospy.Subscriber("/mapdata/stage_position", Float64MultiArray, update_robot_pos)
 
@@ -489,8 +489,8 @@ pub2.publish(suspension_cmd)
 pub3.publish(suspension_cmd)
 pub4.publish(suspension_cmd)
 
-no_ball.data = 0
-pub_no_ball.publish(no_ball)
+#no_ball.data = 0
+#pub_no_ball.publish(no_ball)
 
 #rate control
 rate = rospy.Rate(20)
@@ -505,15 +505,15 @@ goal = [8,1.5] #goal hole coordinate
 goal_region = 0.3 #size of goal region
 l1 = 0.24036657 #2D distance from origin to back side of front wheel
 l2 = 0.30616743 #2D distance from origin to caster wheel
-stuck_back_time = 50/back_spd #number of loops for moving backwards if stuck
+stuck_back_time = 70/back_spd #number of loops for moving backwards if stuck
 docking_time = 180/spd*2 #number of loops for going forward for docking
 
 e_old = 0
 e_i = 0
 stuck_list = []
 while not rospy.is_shutdown():
-  no_ball.data = 0
-  pub_no_ball.publish(no_ball)
+  #no_ball.data = 0
+  #pub_no_ball.publish(no_ball)
 
   print("region: ", region)
   print("holder_state: ", holder_state)
@@ -527,6 +527,12 @@ while not rospy.is_shutdown():
     print("stucked? (if < 0.1) ", find_length(stuck_list[0], stuck_list[50]))
     k = 0
     if find_length(stuck_list[0], stuck_list[50]) < 0.1:
+      i = 0
+      while i < 10:
+        motor_cmd.data = [0,0] #first stop so that doesn't flip forward
+        pub.publish(motor_cmd)
+        i = i + 1
+        rate.sleep()
       while k < stuck_back_time:
         print("stucked..")
         flip = check_flipping()
@@ -610,11 +616,36 @@ while not rospy.is_shutdown():
           rate.sleep()
         
         if align_result == 1:
+          k = docking_time*2
+          i = 0
+          while i  < docking_time*4/6:
+            motor_cmd.data = [spd/2,spd/2]
+            pub1.publish(suspension_cmd)
+            pub2.publish(suspension_cmd)
+            pub3.publish(suspension_cmd)
+            pub4.publish(suspension_cmd)
+            pub.publish(motor_cmd)
+            i = i + 1
+            print("car: ", car)
+            print("...")
+            rate.sleep()
+          '''
           no_ball.data = 1
           pub_no_ball.publish(no_ball)
           rate.sleep()
+          print("NO BALL")
+          print("NO BALL")
+          print("NO BALL")
+          print("NO BALL")
+          print("NO BALL")
+          pub_no_ball.publish(no_ball)
           rate.sleep()
+          pub_no_ball.publish(no_ball)
           rate.sleep()
+          pub_no_ball.publish(no_ball)
+          rate.sleep()
+          '''
+        
         if k < docking_time-1:
           kk = 10
 
