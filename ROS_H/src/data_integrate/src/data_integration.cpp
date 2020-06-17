@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 	// Init : ROS initialization and configuration
 	ros::init(argc, argv, "data_integration");
 	ros::NodeHandle n;
-	ros::Rate loop_rate(5); // Modify this value to change loop rate for ~Hz.
+	ros::Rate loop_rate(20); // Modify this value to change loop rate for ~Hz.
 	ros::Subscriber sub_lidar = n.subscribe<sensor_msgs::LaserScan>("/scan", 256, lidar_Callback);
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 	// ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
