@@ -475,32 +475,17 @@ int main(int argc, char **argv)
 						ballx_temp = ballpos_temp[2 * a2_cnt];
 						bally_temp = ballpos_temp[2 * a2_cnt + 1];
 						dist_temp = sqrt(ballx_temp * ballx_temp + bally_temp * bally_temp);
-						// std::cout << "ballx_temp relative :" << ballx_temp << std::endl;
-						// std::cout << "bally_temp relative :" << bally_temp << std::endl;
-						// std::cout << "theta relative :" << theta_temp[a2_cnt] << std::endl;
-						// std::cout << "dist_temp :" << dist_temp << std::endl;
-						// std::cout << "theta as radian : " << theta_rad << std::endl;
-						// std:: cout << "theta sum : " << theta_rad + theta_temp[a2_cnt] << std::endl;
 						ballx_temp = x_abs + dist_temp * cos(theta_temp[a2_cnt] + theta_rad);
 						bally_temp = y_abs + dist_temp * sin(theta_temp[a2_cnt] + theta_rad);
-						// std::cout << "ballx_temp absolute :" << ballx_temp << std::endl;
-						// std::cout << "bally_temp absolute :" << bally_temp << std::endl;
 						ballx_temp = round(100 * ballx_temp);
 						bally_temp = round(100 * bally_temp);
 						ballx = (int) ballx_temp;
 						bally = (int) bally_temp;
-						// std::cout << "ballx :" << ballx << std::endl;
-						// std::cout << "bally :" << bally << std::endl;
-						// std::cout << "theta :" << theta_temp << std::endl;
-						if ((ballx >= 300) && (ballx < 800) && (bally >= 0) && (bally < 300)) { 
+						if ((ballx >= 307) && (ballx <= 793) && (bally >= 7) && (bally <= 293)) { 
 							ballpos_map[ballx - 300][bally] += 1;
-							// std::cout << "ballx :" << ballx << std::endl;
-							// std::cout << "bally :" << bally << std::endl;
-							// std::cout << "theta :" << theta_temp << std::endl;
 						}
 					}
 				}
-
 			}
 
 			float car_p1_x, car_p2_x, car_p3_x, car_p4_x = 0;
@@ -511,71 +496,80 @@ int main(int argc, char **argv)
 			float car_th2 = atan(323.5 / 144);
 			int cx1, cx2, cy1, cy2;
 
-			if ((theta_rad >= 0) && (theta_rad < M_PI/2)) {
-				car_p1_x = x_abs + car_r1 * cos(theta_rad + car_th1);
-				car_p1_y = y_abs + car_r1 * sin(theta_rad + car_th1);
-				car_p2_x = x_abs + car_r1 * cos(theta_rad - car_th1);
-				car_p2_y = y_abs + car_r1 * sin(theta_rad - car_th1);
-				car_p3_x = x_abs - car_r2 * cos(theta_rad + car_th2);
-				car_p3_y = y_abs - car_r2 * sin(theta_rad + car_th2);
-				car_p4_x = x_abs - car_r2 * cos(theta_rad - car_th2);
-				car_p4_y = y_abs - car_r2 * sin(theta_rad - car_th2);
-			}
-			else if ((theta_rad >= M_PI/2) && (theta_rad < M_PI)) {
-				car_p4_x = x_abs + car_r1 * cos(theta_rad + car_th1);
-				car_p4_y = y_abs + car_r1 * sin(theta_rad + car_th1);
-				car_p1_x = x_abs + car_r1 * cos(theta_rad - car_th1);
-				car_p1_y = y_abs + car_r1 * sin(theta_rad - car_th1);
-				car_p2_x = x_abs - car_r2 * cos(theta_rad + car_th2);
-				car_p2_y = y_abs - car_r2 * sin(theta_rad + car_th2);
-				car_p3_x = x_abs - car_r2 * cos(theta_rad - car_th2);
-				car_p3_y = y_abs - car_r2 * sin(theta_rad - car_th2);
-			}
-			else if ((theta_rad >= M_PI) && (theta_rad < 3 * M_PI/2)) {
-				car_p3_x = x_abs + car_r1 * cos(theta_rad + car_th1);
-				car_p3_y = y_abs + car_r1 * sin(theta_rad + car_th1);
-				car_p4_x = x_abs + car_r1 * cos(theta_rad - car_th1);
-				car_p4_y = y_abs + car_r1 * sin(theta_rad - car_th1);
-				car_p1_x = x_abs - car_r2 * cos(theta_rad + car_th2);
-				car_p1_y = y_abs - car_r2 * sin(theta_rad + car_th2);
-				car_p2_x = x_abs - car_r2 * cos(theta_rad - car_th2);
-				car_p2_y = y_abs - car_r2 * sin(theta_rad - car_th2);
-			}
-			else {
-				car_p2_x = x_abs + car_r1 * cos(theta_rad + car_th1);
-				car_p2_y = y_abs + car_r1 * sin(theta_rad + car_th1);
-				car_p3_x = x_abs + car_r1 * cos(theta_rad - car_th1);
-				car_p3_y = y_abs + car_r1 * sin(theta_rad - car_th1);
-				car_p4_x = x_abs - car_r2 * cos(theta_rad + car_th2);
-				car_p4_y = y_abs - car_r2 * sin(theta_rad + car_th2);
-				car_p1_x = x_abs - car_r2 * cos(theta_rad - car_th2);
-				car_p1_y = y_abs - car_r2 * sin(theta_rad - car_th2);
-			}
+			car_p1_x = x_abs + car_r1 * cos(theta_rad + car_th1);
+			car_p1_y = y_abs + car_r1 * sin(theta_rad + car_th1);
+			car_p2_x = x_abs + car_r1 * cos(theta_rad - car_th1);
+			car_p2_y = y_abs + car_r1 * sin(theta_rad - car_th1);
+			car_p3_x = x_abs - car_r2 * cos(theta_rad + car_th2);
+			car_p3_y = y_abs - car_r2 * sin(theta_rad + car_th2);
+			car_p4_x = x_abs - car_r2 * cos(theta_rad - car_th2);
+			car_p4_y = y_abs - car_r2 * sin(theta_rad - car_th2);
 
 			float ml1 = (car_p2_y - car_p1_y) / (car_p2_x - car_p1_x);
 			float ml2 = (car_p3_y - car_p2_y) / (car_p3_x - car_p2_x);
 			float ml3 = (car_p4_y - car_p3_y) / (car_p4_x - car_p3_x);
 			float ml4 = (car_p1_y - car_p4_y) / (car_p1_x - car_p4_x);
 
-			cx1 = (int) round(100 * car_p4_x);
-			cx2 = (int) round(100 * car_p2_x);
-			cy1 = (int) round(100 * car_p3_y);
-			cy2 = (int) round(100 * car_p1_y);
-
-			for (cx1; cx1 < cx2; cx1++) {
-				for (cy1; cy1 < cy2; cy1++) {
-					if ((cy1 < ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 > ml2 * (cx1 - car_p2_x) + car_p2_y)
-						&& (cy1 > ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 < ml4 * (cx1 - car_p4_x) + car_p4_y)) {
-							ballpos_map[cx1 - 300][cy1] = 0;
+			if ((theta_rad >= 0) && (theta_rad < M_PI/2)) {
+				cx1 = (int) round(100 * car_p4_x);
+				cx2 = (int) round(100 * car_p2_x);
+				cy1 = (int) round(100 * car_p3_y);
+				cy2 = (int) round(100 * car_p1_y);
+				for (cx1; cx1 < cx2; cx1++) {
+					for (cy1; cy1 < cy2; cy1++) {
+						if ((cy1 < ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 > ml2 * (cx1 - car_p2_x) + car_p2_y)
+								&& (cy1 > ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 < ml4 * (cx1 - car_p4_x) + car_p4_y)) {
+									ballpos_map[cx1 - 300][cy1] = 0;
 						}
+					}
+				}
+			}
+			else if ((theta_rad >= M_PI/2) && (theta_rad < M_PI)) {
+				cx1 = (int) round(100 * car_p1_x);
+				cx2 = (int) round(100 * car_p3_x);
+				cy1 = (int) round(100 * car_p4_y);
+				cy2 = (int) round(100 * car_p2_y);
+				for (cx1; cx1 < cx2; cx1++) {
+					for (cy1; cy1 < cy2; cy1++) {
+						if ((cy1 < ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 < ml2 * (cx1 - car_p2_x) + car_p2_y)
+							&& (cy1 > ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 > ml4 * (cx1 - car_p4_x) + car_p4_y)) {
+								ballpos_map[cx1 - 300][cy1] = 0;
+						}
+					}
+				}
+			}
+			else if ((theta_rad >= M_PI) && (theta_rad < 3 * M_PI/2)) {
+				cx1 = (int) round(100 * car_p2_x);
+				cx2 = (int) round(100 * car_p4_x);
+				cy1 = (int) round(100 * car_p1_y);
+				cy2 = (int) round(100 * car_p3_y);
+				for (cx1; cx1 < cx2; cx1++) {
+					for (cy1; cy1 < cy2; cy1++) {
+						if ((cy1 > ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 < ml2 * (cx1 - car_p2_x) + car_p2_y)
+							&& (cy1 < ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 > ml4 * (cx1 - car_p4_x) + car_p4_y)) {
+								ballpos_map[cx1 - 300][cy1] = 0;
+						}
+					}
+				}
+			}
+			else {
+				cx1 = (int) round(100 * car_p3_x);
+				cx2 = (int) round(100 * car_p1_x);
+				cy1 = (int) round(100 * car_p2_y);
+				cy2 = (int) round(100 * car_p4_y);
+				for (cx1; cx1 < cx2; cx1++) {
+					for (cy1; cy1 < cy2; cy1++) {
+						if ((cy1 > ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 > ml2 * (cx1 - car_p2_x) + car_p2_y)
+							&& (cy1 < ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 < ml4 * (cx1 - car_p4_x) + car_p4_y)) {
+								ballpos_map[cx1 - 300][cy1] = 0;
+						}
+					}
 				}
 			}
 
-
 			int old_ballx, old_bally;
 
-			if (noball_flag = 1) {
-				std::cout << "noball flag" << std::endl;
+			if (noball_flag == 1) {
 				std::cout << "noball flag" << std::endl;
 				if ((map_data.at(5) > 3) && (map_data.at(6) > 0)) {
 					std::cout << "erasing" << std::endl;
