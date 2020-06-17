@@ -72,7 +72,7 @@ int ballpos_map[500][300];
 float ballpos_temp[10];
 
 int region_flag = 0;
-int noball_flag = 0;
+// int noball_flag = 0;
 
 // Matrix rotation
 // Input : 2x2 matrix to rotate
@@ -234,11 +234,11 @@ void flag_Callback(const std_msgs::Float64::ConstPtr& flag) {
 	map_mutex.unlock();
 }
 
-void noball_Callback(const std_msgs::Float64::ConstPtr& flag) {
-	map_mutex.lock();
-	noball_flag = flag->data;
-	map_mutex.unlock();
-}
+// void noball_Callback(const std_msgs::Float64::ConstPtr& flag) {
+// 	map_mutex.lock();
+// 	noball_flag = flag->data;
+// 	map_mutex.unlock();
+// }
 
 
 // MAIN FUNCTION
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 	// ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 	ros::Subscriber sub_ballpos = n.subscribe<std_msgs::Float64MultiArray>("/ball_position", 256, ballpos_Callback); ///// TO DO /////
 	ros::Subscriber sub_flag = n.subscribe<std_msgs::Float64>("/regionFlag", 256, flag_Callback); ///// TO DO /////
-	ros::Subscriber sub_noball = n.subscribe<std_msgs::Float64>("/no_ball", 256, noball_Callback); ///// TO DO /////
+	// ros::Subscriber sub_noball = n.subscribe<std_msgs::Float64>("/no_ball", 256, noball_Callback); ///// TO DO /////
 
 
 	ros::Publisher pub_mode = n.advertise<std_msgs::Float64>("/mapdata/mode", 16);
@@ -569,19 +569,19 @@ int main(int argc, char **argv)
 
 			int old_ballx, old_bally;
 
-			if (noball_flag == 1) {
-				std::cout << "noball flag" << std::endl;
-				if ((map_data.at(5) > 3) && (map_data.at(6) > 0)) {
-					std::cout << "erasing" << std::endl;
-					old_ballx = (int) round(100 * map_data.at(5));
-					old_bally = (int) round(100 * map_data.at(6));
-					for (cx1 = -7; cx1 < 8; cx1++) {
-						for (cx2 = -7; cx2 < 8; cx2++) {
-							ballpos_map[old_ballx - 300 + cx1][old_bally + cx2] = 0;
-						}
-					}
-				} 
-			}
+			// if (noball_flag == 1) {
+			// 	std::cout << "noball flag" << std::endl;
+			// 	if ((map_data.at(5) > 3) && (map_data.at(6) > 0)) {
+			// 		std::cout << "erasing" << std::endl;
+			// 		old_ballx = (int) round(100 * map_data.at(5));
+			// 		old_bally = (int) round(100 * map_data.at(6));
+			// 		for (cx1 = -7; cx1 < 8; cx1++) {
+			// 			for (cx2 = -7; cx2 < 8; cx2++) {
+			// 				ballpos_map[old_ballx - 300 + cx1][old_bally + cx2] = 0;
+			// 			}
+			// 		}
+			// 	} 
+			// }
 
 			// Find top area
 			int top[3];
