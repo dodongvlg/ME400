@@ -34,3 +34,4 @@ toy_car2:
     type: effort_controllers/JointPositionController
     joint: rear_right_suspension_joint
     pid: {p: 70, i: 0.0000, d: 45}
+

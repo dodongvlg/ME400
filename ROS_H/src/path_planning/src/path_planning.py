@@ -254,6 +254,10 @@ while not rospy.is_shutdown():
 
     pub.publish(motor_cmd)
     e = e_old
+    pub1.publish(suspension_cmd)
+    pub2.publish(suspension_cmd)
+    pub3.publish(suspension_cmd)
+    pub4.publish(suspension_cmd)
     rate.sleep()
   motor_cmd.data = [0,0]
   pub.publish(motor_cmd)
