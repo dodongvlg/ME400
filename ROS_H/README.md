@@ -16,14 +16,9 @@ pip3 install scikit-image
 sudo apt get update
 sudo apt get upgrade
 ```
-down load source file
-```
-git clone https://github.com/dodongvlg/ME400.git
-```
-build the code
-```
-cd ~/ROS_H
+
 catkin_make
+source devel/setup.bash
 ```
 
 
