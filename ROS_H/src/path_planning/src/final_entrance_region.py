@@ -35,8 +35,6 @@ def update_lidar_orientation(data):
   global lidar_orientation
   lidar_orientation = data.data*pi/180
 
-def update_region(data):
-  region = data.data
 
 #error positive when need to turn left
 def entrance_acutation(e):
@@ -64,7 +62,7 @@ def entrance_acutation(e):
 motor_cmd = Float64MultiArray()
 suspension_cmd = Float64()
 car = [0, 0, 0]
-region = 1
+region = 0
 #entrance_direction_info = [0, 0, 0]
 line_orientation = 0
 lidar_orientation = 0
