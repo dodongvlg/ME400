@@ -41,8 +41,8 @@ img_center = np.zeros((1,1,3),dtype=np.uint8)
 
 
 ######################pusblisher variables#########
-regionFlag=Float64()
-regionFlag.data = 0.0
+regionFlag=Int64()
+regionFlag.data = 0
 holderFlag=Int64()
 xc=Int64()
 orientation = Float64()
@@ -129,10 +129,10 @@ def ballHolderState(img,thresh, redBallMask,blueBallMask,holderMask):
 def regionState(img,thresh,redBallMask,blueBallMask):
     if cv2.countNonZero(redBallMask) > thresh  or cv2.countNonZero(blueBallMask) > 0 :
         print("---------------ball harvesting region------------------------------------")
-        return 1.0
+        return 1
     
     print("---------------line tracing region------------------------------------")
-    return 0.0
+    return 0
 def getColorMask(img,p1,p2=[]):
     
     hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -241,7 +241,7 @@ def left_circle_callback(data) :
     blueBallMask = getColorMask(img_left,blueMask)
 
     
-    if regionFlag.data !=1.0 : 
+    if regionFlag.data !=1 : 
         regionFlag.data = regionState(img_left,5,redBallMask,blueBallMask)
 
     
@@ -281,7 +281,7 @@ def center_circle_callback(data) :
 
     
     #line tracing region
-    if regionFlag.data == 0.0 :
+    if regionFlag.data == 0 :
 
         xc2,orientation2= getCentroidOrientation(img_center,0,0.4)     #proprties of top half of view
 
@@ -296,7 +296,7 @@ def center_circle_callback(data) :
 
     
     #ball harvesting region
-    elif regionFlag.data == 1.0 :
+    elif regionFlag.data == 1 :
         
         holderFlag.data = ballHolderState(img_center,
                                          1,
@@ -327,7 +327,7 @@ if __name__ == '__main__':
 
 
     ####line tracing publishers######################################################
-    regionFlag_pub = rospy.Publisher("/regionFlag", Float64, queue_size = 10)
+    regionFlag_pub = rospy.Publisher("/regionFlag", Int64, queue_size = 10)
     holderFlag_pub = rospy.Publisher("/holderFlag", Int64, queue_size = 10)
     xc_pub = rospy.Publisher("/line/centroid", Int64, queue_size = 10)
     orientation_pub = rospy.Publisher("/line/orientation", Float64, queue_size = 10)
