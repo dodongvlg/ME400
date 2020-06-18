@@ -329,9 +329,9 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if (ent_cnt > ent_thresh && region_flag) mode = STAGE; // Mode transition
+		if (ent_cnt > ent_thresh && ballpos_temp[0] != -1) mode = STAGE; // Mode transition
 		std::cout << std::endl;
-		std::cout << "Current mode : " << mode << " open " << ent_cnt << std::endl;
+		std::cout << "Current mode : " << mode << " open " << ent_cnt << " ballpos " << ballpos_temp[0] << std::endl;
 
 		mode_msg.data = mode;
 		pub_mode.publish(mode_msg);		
