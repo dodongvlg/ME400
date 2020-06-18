@@ -1580,7 +1580,7 @@
 
       <pose>0 0 0 0 0 0</pose>
 
-      <visualize>$(arg laser_visual)</visualize>
+      <visualize>false</visualize>
 
       <update_rate>5</update_rate>
 
@@ -1628,7 +1628,7 @@
 
         <topicName>scan</topicName>
 
-        <frameName>base_scan</frameName>
+        <frameName>imu</frameName>
 
       </plugin>
 
