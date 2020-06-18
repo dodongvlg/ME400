@@ -35,7 +35,7 @@ Callback : Executes every time the subscriber recieves the message.
 #include <core_msgs/ball_position.h>
 #include <sensor_msgs/LaserScan.h>
 #include <gazebo_msgs/ModelStates.h>
-#include <std_msgs/Int8.h>
+#include <std_msgs/Int64.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Float64MultiArray.h>
@@ -71,7 +71,7 @@ float y_ball[6];
 int ballpos_map[500][300];
 float ballpos_temp[10];
 
-int region_flag = 0;
+long region_flag[2];
 // int noball_flag = 0;
 
 // Matrix rotation
@@ -228,9 +228,11 @@ void ballpos_Callback(const std_msgs::Float64MultiArray::ConstPtr& ballpos) {
 	map_mutex.unlock();
 }
 
-void flag_Callback(const std_msgs::Float64::ConstPtr& flag) {
+void flag_Callback(const std_msgs::Int64::ConstPtr& flag) {
 	map_mutex.lock();
-	region_flag = flag->data;
+	std::cout << "Region flag recieving : ";
+	region_flag[0] = flag->data;
+	std::cout << region_flag[0] << std::endl;
 	map_mutex.unlock();
 }
 
@@ -284,7 +286,7 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_camera = n.subscribe<core_msgs::ball_position>("/position", 256, camera_Callback);
 	// ros::Subscriber sub_model = n.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 256, model_Callback);
 	ros::Subscriber sub_ballpos = n.subscribe<std_msgs::Float64MultiArray>("/ball_position", 256, ballpos_Callback); ///// TO DO /////
-	ros::Subscriber sub_flag = n.subscribe<std_msgs::Float64>("/regionFlag", 256, flag_Callback); ///// TO DO /////
+	ros::Subscriber sub_flag = n.subscribe<std_msgs::Int64>("/regionFlag", 256, flag_Callback); ///// TO DO /////
 	// ros::Subscriber sub_noball = n.subscribe<std_msgs::Float64>("/no_ball", 256, noball_Callback); ///// TO DO /////
 
 
@@ -329,9 +331,9 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if (ent_cnt > ent_thresh && ballpos_temp[0] != -1) mode = STAGE; // Mode transition
+		if (ent_cnt > ent_thresh && region_flag[0]) mode = STAGE; // Mode transition
 		std::cout << std::endl;
-		std::cout << "Current mode : " << mode << " open " << ent_cnt << " ballpos " << ballpos_temp[0] << std::endl;
+		std::cout << "Current mode : " << mode << " open " << ent_cnt << " region_flag " << region_flag[0] << std::endl;
 
 		mode_msg.data = mode;
 		pub_mode.publish(mode_msg);		
