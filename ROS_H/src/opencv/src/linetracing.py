@@ -42,6 +42,7 @@ img_center = np.zeros((1,1,3),dtype=np.uint8)
 
 ######################pusblisher variables#########
 regionFlag=Int64()
+regionFlag.data = 0
 holderFlag=Int64()
 xc=Int64()
 orientation = Float64()
@@ -209,6 +210,40 @@ def getCentroidBall(img, thresh,blueBallMask):
 
     #return regionMethod,houghMethod
 
+
+def left_circle_callback(data) :
+    global regionFlag,holderFlag,xc,orientation
+    global blueMask , redMask ,redMask_
+    global holderMask
+    
+    '''
+    Four tasks 
+     1 - detect if the car is in line tracing[=0] or ball harvesting region[=1]   => regionState
+     2 - detect if blue ball[=1] , red ball[=2] or not ball in holder [=0]        => ballHolderState
+     3 - give orientation and horizontal centroid of line                         => getCentroidOrientation
+     4 - give accurate position of ball when aligning in docking position         => getCentroidBall
+    '''
+
+    '''
+    if region is line tracing =>
+        get orientation and centroid of line
+        if slope is detected =>
+            set orientation=0 and move at full speed up
+    
+    else if region is ball harvesting =>
+        get holder content ( no ball, blue ball , red ball)
+        get accurate position of ball using center camera when aligning in docking position
+    '''
+
+    img_left= bridge.imgmsg_to_cv2(data, "bgr8")
+
+    redBallMask = getColorMask(img_left,redMask,redMask_)
+    blueBallMask = getColorMask(img_left,blueMask)
+
+    
+    if regionFlag.data !=1 : 
+        regionFlag.data = regionState(img_left,5,redBallMask,blueBallMask)
+
     
 def center_circle_callback(data) :
     global regionFlag,holderFlag,xc,orientation
@@ -240,8 +275,8 @@ def center_circle_callback(data) :
     blueBallMask = getColorMask(img_center,blueMask)
 
     
-    if regionFlag.data !=1 : 
-        regionFlag.data = regionState(img_center,5,redBallMask,blueBallMask)
+    # if regionFlag.data !=1 : 
+    #     regionFlag.data = regionState(img_center,5,redBallMask,blueBallMask)
 
 
     
@@ -287,7 +322,7 @@ if __name__ == '__main__':
 #   rospy.Subscriber("/camera_left/rgb/image_raw", Image, left_circle_callback)
 #   rospy.Subscriber("/camera_right/rgb/image_raw", Image, right_circle_callback)
     rospy.Subscriber("/camera_center/rgb/image_raw", Image,center_circle_callback )
-    #rospy.Subscriber("/camera_left/rgb/image_raw", Image,left_circle_callback )
+    rospy.Subscriber("/camera_left/rgb/image_raw", Image,left_circle_callback )
     #rospy.Subscriber("/camera_right/rgb/image_raw", Image,right_circle_callback )
 
 
