@@ -16,7 +16,8 @@ pip3 install scikit-image
 sudo apt get update
 sudo apt get upgrade
 ```
-
+Install
+```
 catkin_make
 source devel/setup.bash
 ```
