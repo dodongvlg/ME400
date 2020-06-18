@@ -239,7 +239,6 @@ def motor_actuation(path_list, car):
 
   print('motor_cmd: ', motor_cmd.data)
   print('car: ', car)
-  print('real_car: ', car2)
   print('..')
 
 def motor_actuation_to_goal(path_list, car, speed):
@@ -286,7 +285,6 @@ def motor_actuation_to_goal(path_list, car, speed):
 
   print('motor_cmd: ', motor_cmd.data)
   print('car: ', car)
-  print('real_car: ', car2)
   print('..')
 
 #align to the target ball position
@@ -343,7 +341,6 @@ def align(target_ball_pos):
     print("error: ", e)
     print('motor_cmd: ', motor_cmd.data)
     print('car: ', car)
-    print('real_car: ', car2)
     print("vision alignment error: ", vision_alignment_error)
     print('..')
     kk = kk + 1
@@ -378,7 +375,6 @@ def align_vision():
     print("error: ", vision_alignment_error)
     print('motor_cmd: ', motor_cmd.data)
     print('car: ', car)
-    print('real_car: ', car2)
     print('..')
     kk = kk + 1
     rate.sleep()
