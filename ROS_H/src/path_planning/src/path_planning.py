@@ -539,7 +539,7 @@ while not rospy.is_shutdown():
   #no_ball.data = 0
   #pub_no_ball.publish(no_ball)
   if region == 1:
-		[p_gain, i_gain, d_gain] = [6, 0, 0.01] #pid gains for motor actuation
+    [p_gain, i_gain, d_gain] = [6, 0, 0.01] #pid gains for motor actuation
     if initiate == 0:
       while find_length([car[0], car[1]], [3.4,0.5]) > 0.05:
         path_list = [[car[0], car[1]], [3.4,0.5]]
@@ -683,21 +683,21 @@ while not rospy.is_shutdown():
     rate.sleep()
 
   else:
-		[p_gain, i_gain, d_gain] = [5, 0, 0]
-		if region == 0:
-			#[x_centroid, orientation] = entrance_direction_info
-			if x_centroid < 0:
-				print("No line detected. Using lidar")
-				error = lidar_orientation
-				print("lidar_orientation based error: ", error)
-				entrance_acutation(error)
-			else:
-				if abs(x_centroid - center)/center > threshold:
-					error = -(x_centroid - center)/center*(pi/2*1.5)
-					print("Centroid based error: ", error)
-					entrance_acutation(error)
-				else:
-					error = line_orientation
-					print("Line_orientation based error: ", error)
-					entrance_acutation(error)
-			rate.sleep()
+    [p_gain, i_gain, d_gain] = [5, 0, 0]
+    if region == 0:
+      #[x_centroid, orientation] = entrance_direction_info
+      if x_centroid < 0:
+        print("No line detected. Using lidar")
+        error = lidar_orientation
+        print("lidar_orientation based error: ", error)
+        entrance_acutation(error)
+      else:
+        if abs(x_centroid - center)/center > threshold:
+          error = -(x_centroid - center)/center*(pi/2*1.5)
+          print("Centroid based error: ", error)
+          entrance_acutation(error)
+        else:
+          error = line_orientation
+          print("Line_orientation based error: ", error)
+          entrance_acutation(error)
+      rate.sleep()
