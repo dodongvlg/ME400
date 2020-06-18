@@ -31,6 +31,10 @@ def update_orientation(data):
   global line_orientation
   line_orientation = data.data
 
+def update_lidar_orientation(data):
+  global lidar_orientation
+  lidar_orientation = data.data*pi/180
+
 def update_region(data):
   region = data.data
 
@@ -60,9 +64,10 @@ def entrance_acutation(e):
 motor_cmd = Float64MultiArray()
 suspension_cmd = Float64()
 car = [0, 0, 0]
-region = 0
+region = 1
 #entrance_direction_info = [0, 0, 0]
 line_orientation = 0
+lidar_orientation = 0
 x_centroid = 960
 
 #topic names
@@ -83,6 +88,7 @@ pub4 = rospy.Publisher(suspension_topic_rear_right, Float64, queue_size=10)
 rospy.Subscriber("/line/centroid", Int64, update_x_centroid)
 rospy.Subscriber("/line/orientation", Float64, update_orientation)
 rospy.Subscriber("/mapdata/mode", Float64, update_region)
+rospy.Subscriber("/mapdata/enter_direction", Float64, update_lidar_orientation)
 
 #node initiation
 rospy.init_node("path_planning_entrance")
@@ -110,8 +116,10 @@ while not rospy.is_shutdown():
   if region == 0:
     #[x_centroid, orientation] = entrance_direction_info
     if x_centroid < 0:
-      print("No line detected!")
-      #later fill it with lidar orientation
+      print("No line detected. Using lidar")
+      error = lidar_orientation
+      print("lidar_orientation based error: ", error)
+      entrance_acutation(error)
     else:
       if abs(x_centroid - center)/center > threshold:
         error = -(x_centroid - center)/center*(pi/2*1.5)
