@@ -9,8 +9,8 @@ sudo apt-get install ros-melodic-joy ros-melodic-teleop-twist-joy ros-melodic-te
 install gazebo_ros_control
 ```
 sudo apt-get install ros-melodic-gazebo-ros-pkgs ros-melodic-gazebo-ros-control
-sudo apt install python3-pip
-pip3 install scikit-image
+sudo apt install python-pip
+pip install scikit-image
 sudo apt get update
 sudo apt get upgrade
 ```
