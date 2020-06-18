@@ -9,6 +9,8 @@ sudo apt-get install ros-melodic-joy ros-melodic-teleop-twist-joy ros-melodic-te
 install gazebo_ros_control
 ```
 sudo apt-get install ros-melodic-gazebo-ros-pkgs ros-melodic-gazebo-ros-control
+sudo apt install python3-pip
+pip3 install scikit-image
 ```
 down load source file
 ```
@@ -29,40 +31,18 @@ roslaunch map_generate import_world.launch
 ```
 spawn the robot
 ```
-roslaunch turtlebot3_description spawn_turtlebot3.launch
+roslaunch toy_car two_spawn_entrance.launch
 ```
-launch the controller_manager
-```
-roslaunch junny_control junny_control.launch
-```
-steer the robot
-```
-rosrun turtlebot3_teleop turtlebot3_teleop_key
-```
-
-```
-->              q     w     e
-                a     s     d
-                      x
-```
-```
-w: linear velocity increase
-a: angular velocity increase to clockwise
-s: stop
-d: angular velocity increase to counter-clockwise
-x: linear velocity decrease
-```
-detect and publish ball position from camera image
-```
-rosrun ball_detection ball_detect_node
-```
-main data processing
+Data Integration node on
 ```
 rosrun data_integrate data_integration_node
 ```
-draw the lidar data and ball position
+OpenCV Node on
 ```
-rosrun data_integrate data_show_node
+rosrun opencv linetracing.py
+rosrun opencv opencv.py
 ```
-
-
+Start autonomous driving
+```
+rosrun path_planning path_planning.py
+```
