@@ -329,7 +329,7 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if (ent_cnt > ent_thresh || region_flag) mode = STAGE; // Mode transition
+		if (ent_cnt > ent_thresh && region_flag) mode = STAGE; // Mode transition
 		std::cout << std::endl;
 		std::cout << "Current mode : " << mode << " open " << ent_cnt << std::endl;
 
