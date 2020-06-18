@@ -55,8 +55,13 @@ greenMask=[50,115,131,255,8,252]
 redMask = [142,180,99,255,8,252];
 redMask_=[0,4,99,255,8,252]
 ###################################################
-
-
+'''
+HOLDER MASK INITIALIZATION
+'''
+f =np.zeros((1080,1920,3),dtype=np.uint8)
+holderMask = cv2.circle(f.copy(),(960,1300),450,(255,255,255),-1);
+holderMask=holderMask[:,:,0]
+#################################################################################
 
 def adjustOrientationValue(val):
     '''
@@ -92,7 +97,7 @@ def getProp(binaryImage):
     regions = measure.regionprops(binaryImage)
     if regions !=[] :return regions[0] 
     else: return []
-def ballHolderState(img,thresh, redBallMask,blueBallMask):
+def ballHolderState(img,thresh, redBallMask,blueBallMask,holderMask):
     '''
     thresh = > minimum ratio of mask and ball intersection measured using white pixels
     outputs  
@@ -101,25 +106,19 @@ def ballHolderState(img,thresh, redBallMask,blueBallMask):
         2=> if red ball in holder
     '''
     
-    def compareHolder(img, x= 960 , y = 1300, radius = 450 ):
-        yy,xx= img.shape
-        f =np.zeros((yy,xx,3),dtype=np.uint8)
-        mask = cv2.circle(f.copy(),(x,y ),radius,(255,255,255),-1);mask=mask[:,:,0]
-        
-        maskAndImg= cv2.bitwise_and(mask,img)
-        
-        maskWhitePixels = float(cv2.countNonZero(mask))
+    def compareHolder(img,holderMask):
+        maskAndImg= cv2.bitwise_and(holderMask,img)
         maskAndImgWhitePixels= float(cv2.countNonZero(maskAndImg))
-        return maskAndImgWhitePixels  / maskWhitePixels  
+        return maskAndImgWhitePixels  / 127880  
 
-    ratioBlue= compareHolder(blueBallMask) ; 
+    ratioBlue= compareHolder(blueBallMask,holderMask) ; 
 
     if ratioBlue >=thresh : 
         print("holder: blue ball ") ;
         return 1 
     
     else :
-        ratioRed= compareHolder(redBallMask)
+        ratioRed= compareHolder(redBallMask,holderMask)
         if ratioRed >= thresh : 
             print("holder: red ball ") ;
             return 2
@@ -214,7 +213,7 @@ def getCentroidBall(img, thresh,blueBallMask):
 def center_circle_callback(data) :
     global regionFlag,holderFlag,xc,orientation
     global blueMask , redMask ,redMask_
-    
+    global holderMask
     
     '''
     Four tasks 
@@ -239,7 +238,6 @@ def center_circle_callback(data) :
 
     redBallMask = getColorMask(img_center,redMask,redMask_)
     blueBallMask = getColorMask(img_center,blueMask)
-
 
     
     if regionFlag.data !=1 : 
@@ -268,7 +266,8 @@ def center_circle_callback(data) :
         holderFlag.data = ballHolderState(img_center,
                                          1,
                                          selectSection(redBallMask,0.5,1),
-                                         selectSection(blueBallMask,0.5,1) )  
+                                         selectSection(blueBallMask,0.5,1) ,
+                                         holderMask)  
         
         
         xcDocking.data = getCentroidBall(img_center,0.7 , blueBallMask)
