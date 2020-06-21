@@ -589,6 +589,21 @@ while not rospy.is_shutdown():
     start = [car[0], car[1]]
 
     if holder_state != 1:
+      # after goal in
+      while find_length(start, goal) < goal_region: 
+        while k < 5:
+          motor_cmd.data = [0,0] #first stop so that doesn't flip forward
+          pub.publish(motor_cmd)
+          k = k + 1
+          rate.sleep()
+        start = [car[0], car[1]]
+        motor_cmd.data = [-back_spd,-back_spd] #to avoid wheel to fall in the hole, move backwards
+        pub1.publish(suspension_cmd)
+        pub2.publish(suspension_cmd)
+        pub3.publish(suspension_cmd)
+        pub4.publish(suspension_cmd)
+        pub.publish(motor_cmd)
+        rate.sleep()
       if target[0] < 0:
         print("scanning")
         print("scan_path: ", scan_path)
@@ -602,22 +617,6 @@ while not rospy.is_shutdown():
       else:
         obstacle_list.append(target)
         end = docking
-
-        # after goal in
-        while find_length(start, goal) < goal_region: 
-          while k < 5:
-            motor_cmd.data = [0,0] #first stop so that doesn't flip forward
-            pub.publish(motor_cmd)
-            k = k + 1
-            rate.sleep()
-          start = [car[0], car[1]]
-          motor_cmd.data = [-back_spd,-back_spd] #to avoid wheel to fall in the hole, move backwards
-          pub1.publish(suspension_cmd)
-          pub2.publish(suspension_cmd)
-          pub3.publish(suspension_cmd)
-          pub4.publish(suspension_cmd)
-          pub.publish(motor_cmd)
-          rate.sleep()
 
         #approaching the docking point
         if find_length(start, end) > close_enough: 
