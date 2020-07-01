@@ -10,19 +10,12 @@ from cv_bridge import CvBridge, CvBridgeError
 bridge = CvBridge()
 
 cam_distance = 0.25 # 250mm
-# f_mm = 3.67 / 1000
-# sensor_width = 4.8 / 1000
-# pixel_width = 1920
-# f_pixel = f_mm * pixel_width / sensor_width
 disparity = 0
 img_left = 0
 img_right = 0
 
-
-# b = [98, 131, 131, 255, 0, 255]  # high hue, low hue, high calue, low value, high sat, low sat
-# bC = [1, 101, 68, 8, 0, 68, 1]	# parameter related to circles (dp,minDist,param1,param2,minRadius,maxRadius,BlurSize)
-b = [95, 129, 159, 255, 0, 255]
-bC = [1, 901, 1, 26, 0, 244, 7]
+b = [95, 129, 159, 255, 0, 255]     # high hue, low hue, high calue, low value, high sat, low sat
+bC = [1, 901, 1, 26, 0, 244, 7]     # parameter related to circles (dp,minDist,param1,param2,minRadius,maxRadius,BlurSize)
 
 def getHSV(frame, l, m=[]):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -35,7 +28,6 @@ def getHSV(frame, l, m=[]):
     else:
         mask = cv2.inRange(hsv, LB, UB)
     res = cv2.bitwise_and(frame, frame, mask=mask)
-    # return res#,cv2.bitwise_not(mask)
     return mask
 
 def getHoughCircles(frame, l):
@@ -48,7 +40,6 @@ def getHoughCircles(frame, l):
     else:
         highlight = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
     circles = cv2.HoughCircles(frame, cv2.HOUGH_GRADIENT, l[0], l[1], param1=l[2], param2=l[3], minRadius=l[4], maxRadius=l[5])
-    # print(circles)
     if circles is not None:
         return circles
     else:
@@ -72,19 +63,12 @@ def left_circle_callback(data):
     left_blue_ball = np.array([], dtype=np.float32)
     img_left = bridge.imgmsg_to_cv2(data, "bgr8")
     left_blue_ball = getHoughCircles(getHSV(img_left, b), bC)
-    # print("left", left_blue_ball)
-    # cv2.imshow('blue',drawCircles(img_left,[left_blue_ball],["Blue ball"]))
-    # cv2.waitKey(0)
-    # left_blue_ball = getHoughCircles(getHSV(img_left, b), bC)
     
 def right_circle_callback(data):
     global right_blue_ball
     right_blue_ball = np.array([], dtype=np.float32)
     img_right = bridge.imgmsg_to_cv2(data, "bgr8")
     right_blue_ball = getHoughCircles(getHSV(img_right, b), bC)
-    # cv2.imshow('blue',drawCircles(img_right,[right_blue_ball],["Blue ball"]))
-    # cv2.waitKey(0)
-    # print("right", right_blue_ball)
 
 if __name__ == '__main__':
     global left_blue_ball
