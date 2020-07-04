@@ -236,13 +236,6 @@ void flag_Callback(const std_msgs::Int64::ConstPtr& flag) {
 	map_mutex.unlock();
 }
 
-// void noball_Callback(const std_msgs::Float64::ConstPtr& flag) {
-// 	map_mutex.lock();
-// 	noball_flag = flag->data;
-// 	map_mutex.unlock();
-// }
-
-
 // MAIN FUNCTION
 int main(int argc, char **argv)
 {
@@ -443,9 +436,6 @@ int main(int argc, char **argv)
 			std::cout << "Position : " << map_data.at(1) << ", " << map_data.at(2) << "  Orientation : " << map_data.at(0) << std::endl;
 
 			// Loop A - 2 : Position objects on the map, to be implemented
-			// TODO //
-			// std::cout << "Entered loop2" << std::endl;;
-			
 			float theta_temp[5];
 			float dist_temp;
 			float ballx_temp, bally_temp;
@@ -519,17 +509,10 @@ int main(int argc, char **argv)
 			i_car_p4_x = (int) round(100 * car_p4_x) - 300;
 			i_car_p4_y = (int) round(100 * car_p4_y);
 
-			// float ml1 = (i_car_p2_y - i_car_p1_y) / (i_car_p2_x - i_car_p1_x);
-			// float ml2 = (i_car_p3_y - i_car_p2_y) / (i_car_p3_x - i_car_p2_x);
-			// float ml3 = (i_car_p4_y - i_car_p3_y) / (i_car_p4_x - i_car_p3_x);
-			// float ml4 = (i_car_p1_y - i_car_p4_y) / (i_car_p1_x - i_car_p4_x);
 			float ml1 = (car_p2_y - car_p1_y) / (car_p2_x - car_p1_x);
 			float ml2 = (car_p3_y - car_p2_y) / (car_p3_x - car_p2_x);
 			float ml3 = (car_p4_y - car_p3_y) / (car_p4_x - car_p3_x);
 			float ml4 = (car_p1_y - car_p4_y) / (car_p1_x - car_p4_x);
-
-			// std::cout << "mls : " << ml1 << ml2 << ml3 << ml4 << std::endl;
-			
 
 			if (theta_rad < 0) {
 				theta_rad = theta_rad + 2 * M_PI;
@@ -539,51 +522,16 @@ int main(int argc, char **argv)
 
 			// std::cout << "theta_rad : " << theta_rad << std::endl;
 			if ((theta_rad >= 0) && (theta_rad < M_PI/2)) {
-				// std::cout << "p1x : " << car_p1_x << std::endl;
-				// std::cout << "p1y : " << car_p1_y << std::endl;
-				// std::cout << "p2x : " << car_p2_x << std::endl;
-				// std::cout << "p2y : " << car_p2_y << std::endl;
-				// std::cout << "p3x : " << car_p3_x << std::endl;
-				// std::cout << "p3y : " << car_p3_y << std::endl;
-				// std::cout << "p4x : " << car_p4_x << std::endl;
-				// std::cout << "p4y : " << car_p4_y << std::endl;
-
-				// std::cout << "i_p1x : " << i_car_p1_x << std::endl;
-				// std::cout << "i_p1y : " << i_car_p1_y << std::endl;
-				// std::cout << "i_p2x : " << i_car_p2_x << std::endl;
-				// std::cout << "i_p2y : " << i_car_p2_y << std::endl;
-				// std::cout << "i_p3x : " << i_car_p3_x << std::endl;
-				// std::cout << "i_p3y : " << i_car_p3_y << std::endl;
-				// std::cout << "i_p4x : " << i_car_p4_x << std::endl;
-				// std::cout << "i_p4y : " << i_car_p4_y << std::endl;
-
-				// cx1 = (int) round(100 * car_p4_x);
-				// cx2 = (int) round(100 * car_p2_x);
-				// cy1 = (int) round(100 * car_p3_y);
-				// cy2 = (int) round(100 * car_p1_y);
-				// std::cout << "1";
-				// std::cout << cx1 << " " << cx2 << " " << cy1 << " " << cy2 << std::endl;
 				for (me1 = i_car_p4_x; me1 < i_car_p2_x; me1++) {
 					for (me2 = i_car_p3_y; me2 < i_car_p1_y; me2++) {
-						// std::cout << "fuck";
 						if ((me2 < (ml1 * (me1 - i_car_p1_x) + i_car_p1_y)) && (me2 > (ml2 * (me1 - i_car_p2_x) + i_car_p2_y))
 								&& (me2 > (ml3 * (me1 - i_car_p3_x) + i_car_p3_y)) && (me2 < (ml4 * (me1 - i_car_p4_x) + i_car_p4_y))) {
 									if ((me1 >= 0) && (me1 < 500) && (me2 >= 0) && (me2 < 300)) {
-										// std::cout << "me1 : " << me1 << "me2 : " << me2 << std::endl;
 										ballpos_map[me1][me2] = 0;
 									}
 						}
 					}
 				}
-				// for (cx1; cx1 < cx2; cx1++) {
-				// 	for (cy1; cy1 < cy2; cy1++) {
-				// 		if ((cy1 < ml1 * (cx1 - car_p1_x) + car_p1_y) && (cy1 > ml2 * (cx1 - car_p2_x) + car_p2_y)
-				// 				&& (cy1 > ml3 * (cx1 - car_p3_x) + car_p3_y) && (cy1 < ml4 * (cx1 - car_p4_x) + car_p4_y)) {
-				// 					std::cout << "1";
-				// 					ballpos_map[cx1 - 300][cy1] = 0;
-				// 		}
-				// 	}
-				// }
 			}
 			else if ((theta_rad >= M_PI/2) && (theta_rad < M_PI)) {
 				for (me1 = i_car_p1_x; me1 < i_car_p3_x; me1++) {
@@ -624,20 +572,6 @@ int main(int argc, char **argv)
 
 			int old_ballx, old_bally;
 
-			// if (noball_flag == 1) {
-			// 	std::cout << "noball flag" << std::endl;
-			// 	if ((map_data.at(5) > 3) && (map_data.at(6) > 0)) {
-			// 		std::cout << "erasing" << std::endl;
-			// 		old_ballx = (int) round(100 * map_data.at(5));
-			// 		old_bally = (int) round(100 * map_data.at(6));
-			// 		for (cx1 = -7; cx1 < 8; cx1++) {
-			// 			for (cx2 = -7; cx2 < 8; cx2++) {
-			// 				ballpos_map[old_ballx - 300 + cx1][old_bally + cx2] = 0;
-			// 			}
-			// 		}
-			// 	} 
-			// }
-
 			// Find top area
 			int top[3];
 			int findx, findy;
@@ -672,35 +606,17 @@ int main(int argc, char **argv)
 
 
 			// Loop A - 3 : Find optimal global & local path
-			// near_ball = 0;
-			// near_dist = 5;
-			// for (i_ball = m_ball; i_ball < n_ball; i_ball++) {
-			// 	dist = calc_dist(x_abs, x_ball[i_ball], y_abs, y_ball[i_ball]);
-			// 	if (dist < near_dist) {
-			// 		near_dist = dist;
-			// 		near_ball = i_ball;
-			// 	}
-			// }
-			// x_obj1 = x_ball[near_ball];
-			// y_obj1 = y_ball[near_ball];
 			near_ball = 0;
 			x_obj1 = x_ball[near_ball];
 			y_obj1 = y_ball[near_ball];
 
-			// std::cout << "xobj0 : " << x_obj0 << std::endl;
-			// std::cout << "yobj0 : " << y_obj0 << std::endl;
-			// std::cout << "xobj1 : " << x_obj1 << std::endl;
-			// std::cout << "yobj1 : " << y_obj1 << std::endl;
-
 			if ((x_obj1 == (float) -1) || (y_obj1 == (float) -1)) {
-				// std::cout << "case -1" << std::endl;
 				x_obj0 = -1;
 				y_obj0 = -1;
 				x_obj1 = -1;
 				y_obj1 = -1;
 			}
 			else {
-				// std::cout << "not case -1" << std::endl;
 				agl_dock = atan((y_hole - y_obj1) / (x_hole - x_obj1));
 				
 				danger = 1;
@@ -717,11 +633,6 @@ int main(int argc, char **argv)
 					}
 					
 				}
-				// std::cout << "xobj0 : " << x_obj0 << std::endl;
-				// std::cout << "yobj0 : " << y_obj0 << std::endl;
-				// std::cout << "xobj1 : " << x_obj1 << std::endl;
-				// std::cout << "yobj1 : " << y_obj1 << std::endl;
-
 
 				if (x_obj0 < 3.25) x_obj0 = 3.25;
 				if (x_obj0 > 7.75) x_obj0 = 7.75;
